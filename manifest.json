@@ -1,7 +1,7 @@
 {
   "name": "Tarefa & Recompensa",
   "short_name": "Tarefa",
-  "start_url": "./tarefas_recompensa.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d0b08",
   "theme_color": "#0d0b08",

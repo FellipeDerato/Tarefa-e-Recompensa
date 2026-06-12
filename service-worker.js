@@ -1,5 +1,6 @@
 const CACHE_NAME = 'tarefa-recompensa-v1';
 const ASSETS = [
+  './index.html',
   './tarefas_recompensa.html',
   './app.js',
   './style.css',
@@ -18,5 +19,10 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then(resp => resp || fetch(e.request).catch(() => caches.match('./tarefas_recompensa.html'))));
+  e.respondWith(
+    caches.match(e.request).then(resp => {
+      if (resp) return resp;
+      return fetch(e.request).catch(() => caches.match('./index.html'));
+    })
+  );
 });

@@ -219,6 +219,7 @@ let state = {
   pomodoroRunning: false, pomodoroPhase: 'foco',
   pomodoroSecondsLeft: 25 * 60, pomodoroSessions: 0,
   customSmall: Array(6).fill(''), customLarge: Array(6).fill(''),
+  compactUI: true,
   config: { foco: 25, curta: 5, longa: 15 }
 };
 let pomodoroInterval = null;
@@ -290,7 +291,7 @@ function renderTodos() {
       <div class="todo-item-main">
         <button class="todo-toggle" style="${hasChildren ? '' : 'cursor:default; opacity:0.4'}">${toggleIcon}</button>
         <button class="todo-check${checkedClass}">${checkIcon}</button>
-        <input class="todo-name" placeholder="Nome do afazer..." value="${escHtml(todo.name)}">
+          <textarea rows="1" col="1" class="todo-name" placeholder="Nome do afazer...">${escHtml(todo.name)}</textarea>
         <button class="badge-btn badge-diff${grandeClass}">${diffText}</button>
         <button class="badge-btn btn-add-sub">+ SUB</button>
         <button class="todo-del" title="Excluir">✕</button>
@@ -305,6 +306,25 @@ function renderTodos() {
     const addSub = node.querySelector('.btn-add-sub');
     const del = node.querySelector('.todo-del');
     const childrenContainer = node.querySelector('.todo-children');
+
+    // autosize helper for textareas: keep 1-line height unless content wraps
+    function autoSizeTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      const cs = window.getComputedStyle(el);
+      const lineHeight = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.2) || 18;
+      const scroll = el.scrollHeight;
+      const padding = parseFloat(cs.paddingTop || 0) + parseFloat(cs.paddingBottom || 0);
+      const single = Math.ceil(lineHeight + padding);
+      if (scroll > single + 2) {
+        // content wrapped to multiple lines -> expand to fit (limit to 6 lines)
+        const max = Math.ceil(lineHeight * 6 + padding);
+        el.style.height = Math.min(scroll, max) + 'px';
+      } else {
+        // keep single-line height
+        el.style.height = single + 'px';
+      }
+    }
 
     tgl.onclick = () => {
       if (hasChildren) {
@@ -325,8 +345,12 @@ function renderTodos() {
 
     inp.oninput = () => {
       todo.name = inp.value;
+      autoSizeTextarea(inp);
       saveState();
     };
+    // init autosize
+      // init autosize (defer to allow element to layout)
+      setTimeout(() => autoSizeTextarea(inp), 0);
 
     diff.onclick = () => {
       playSfx('botaoBase');
@@ -375,17 +399,22 @@ function renderTodos() {
 function createNewRow() {
   const div = document.createElement('div');
   div.className = 'todo-item-main todo-item-new';
-  div.style.marginTop = '8px';
+  div.style.marginTop = '4px';
   div.innerHTML = `
     <button class="todo-toggle" style="cursor:default;opacity:0.3">•</button>
     <button class="todo-check" style="cursor:default;opacity:0.3"></button>
-    <input class="todo-name" placeholder="Novo afazer...">
+    <textarea rows="1" class="todo-name" placeholder="Novo afazer..."></textarea>
     <button class="badge-btn badge-diff" style="opacity:0.2;cursor:default">PEQUENO</button>
     <button class="badge-btn btn-add-sub" style="opacity:0.2;cursor:default">+ SUB</button>
     <button class="todo-del" style="opacity:0;pointer-events:none">✕</button>`;
   
   // Volta a disparar assim que qualquer coisa for digitada (ao vivo)
-  div.querySelector('.todo-name').oninput = function() { addTodoFromInput(this); };
+  const newInp = div.querySelector('.todo-name');
+  newInp.oninput = function() {
+    autoSizeTextarea(this);
+    addTodoFromInput(this);
+  };
+  setTimeout(() => autoSizeTextarea(newInp), 0);
   
   return div;
 }
@@ -717,6 +746,13 @@ function renderConfig() {
         saveState();
       };
     }
+  }
+  // Compact UI toggle
+  const compactEl = document.getElementById('cfg-compact-ui');
+  if (compactEl) {
+    compactEl.checked = !!state.compactUI;
+    document.body.classList.toggle('compact-ui', !!state.compactUI);
+    compactEl.onchange = function() { state.compactUI = !!this.checked; document.body.classList.toggle('compact-ui', !!state.compactUI); saveState(); };
   }
   loadVolState();
 }
