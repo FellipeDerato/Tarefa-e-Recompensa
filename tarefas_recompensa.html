@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAREFA & RECOMPENSA</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="style.css" rel="stylesheet"/>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d0b08">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="media/icon-512.svg">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 class="app-title">Tarefa <span>&</span> Recompensa</h1>
+  <div class="divider-skull">✦ &nbsp; TRABALHE OU SOFRA &nbsp; ✦</div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="nav-tab active" onclick="switchTab('afazeres',this)">☰ Afazeres</button>
+  <button class="nav-tab" onclick="switchTab('pomodoro',this)">⏱ Pomodoro</button>
+  <button class="nav-tab" onclick="switchTab('config',this)">⚙ Configurar</button>
+</nav>
+
+<main class="main">
+
+  <div class="tab-content active" id="tab-afazeres">
+    <div class="section-label">Lista de afazeres</div>
+    <div class="todo-list" id="todo-list"></div>
+  </div>
+
+  <div class="tab-content" id="tab-pomodoro">
+    <div class="pomo-container">
+      <div class="section-label" style="width:100%">Modo Pomodoro</div>
+      <div class="pomo-clock">
+        <svg class="pomo-progress-ring" viewBox="0 0 224 224">
+          <circle class="pomo-ring-track" cx="112" cy="112" r="109"/>
+          <circle class="pomo-ring-fill" id="pomo-ring" cx="112" cy="112" r="109" stroke-dasharray="685" stroke-dashoffset="0"/>
+        </svg>
+        <div class="pomo-time" id="pomo-display">25:00</div>
+        <div class="pomo-phase" id="pomo-phase">FOCO</div>
+        <div class="pomo-session" id="pomo-session">SESSÃO 1</div>
+      </div>
+      <div class="pomo-controls">
+        <button class="btn-grunge primary" id="btn-start" onclick="togglePomodoro()">▶ Iniciar</button>
+	<button class="btn-grunge" onclick="skipPomodoro()">⏭ Pular</button>
+        <button class="btn-grunge danger" onclick="resetPomodoro()">↺ Resetar</button>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; justify-content:center;">
+        <label for="auto-advance" style="font-size:12px; color:var(--text2);">Auto iniciar próxima</label>
+        <button id="auto-advance" class="todo-check" aria-pressed="false" title="Auto iniciar próxima sessão"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-config">
+    <div class="config-grid">
+
+      <div class="config-card">
+        <div class="config-card-title">⏱ Tempo da Tarefa</div>
+        <div class="config-field">
+          <span class="config-label">Foco (minutos)</span>
+          <input class="config-input" type="number" id="cfg-foco" value="25" min="1" max="120" onchange="saveConfig()">
+        </div>
+        <div class="config-field">
+          <span class="config-label">Pausa Curta (minutos)</span>
+          <input class="config-input" type="number" id="cfg-curta" value="5" min="1" max="60" onchange="saveConfig()">
+        </div>
+        <div class="config-field">
+          <span class="config-label">Pausa Longa (minutos)</span>
+          <input class="config-input" type="number" id="cfg-longa" value="15" min="1" max="120" onchange="saveConfig()">
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">🎲 Pool de Recompensas</div>
+        <div class="config-field"><span class="config-label">Usar nas roletas</span></div>
+        <div class="mode-select-row" id="mode-select-row">
+          <button class="mode-select-btn active" data-mode="boas" onclick="setRewardMode('boas',this)">Boas</button>
+          <button class="mode-select-btn" data-mode="ruins" onclick="setRewardMode('ruins',this)">Ruins</button>
+          <button class="mode-select-btn" data-mode="custom" onclick="setRewardMode('custom',this)">Custom</button>
+          <button class="mode-select-btn" data-mode="todas" onclick="setRewardMode('todas',this)">Todas</button>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">🔊 Volume</div>
+        <div class="vol-row">
+          <span class="vol-label">Geral</span>
+          <input type="range" class="vol-slider" id="vol-geral" min="0" max="100" value="80" oninput="onVolChange()">
+          <span class="vol-val" id="vol-geral-val">80</span>
+        </div>
+        <div class="vol-row">
+          <span class="vol-label">Efeitos</span>
+          <input type="range" class="vol-slider" id="vol-fx" min="0" max="100" value="80" oninput="onVolChange()">
+          <span class="vol-val" id="vol-fx-val">80</span>
+        </div>
+        <div class="vol-row">
+          <span class="vol-label">Timer</span>
+          <input type="range" class="vol-slider" id="vol-timer" min="0" max="100" value="80" oninput="onVolChange()">
+          <span class="vol-val" id="vol-timer-val">80</span>
+        </div>
+        <div class="vol-row">
+          <span class="vol-label">Ambiente</span>
+          <input type="range" class="vol-slider" id="vol-amb" min="0" max="100" value="40" oninput="onVolChange()">
+          <span class="vol-val" id="vol-amb-val">40</span>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-card-title">🎲 Recompensas Pequenas Padrão</div>
+        <div class="reward-list" id="default-small-list"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-title">👑 Recompensas Grandes Padrão</div>
+        <div class="reward-list" id="default-large-list"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-title">💀 Sofrimentos Pequenos Padrão</div>
+        <div class="reward-list" id="default-bad-small-list"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-title">💀 Sofrimentos Grandes Padrão</div>
+        <div class="reward-list" id="default-bad-large-list"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-title">✏ Recompensas Pequenas Custom</div>
+        <div class="reward-list" id="custom-small-list"></div>
+      </div>
+      <div class="config-card">
+        <div class="config-card-title">✏ Recompensas Grandes Custom</div>
+        <div class="reward-list" id="custom-large-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<div class="roulette-overlay" id="roulette-overlay">
+  <div class="roulette-box">
+    <div class="roulette-title" id="roulette-title">🎲 Girando o Destino...</div>
+    <div class="wheel-container">
+      <div class="wheel-needle"></div>
+      <canvas class="wheel-canvas" id="wheel-canvas" width="280" height="280"></canvas>
+      <div class="wheel-center"></div>
+    </div>
+    <div class="roulette-result" id="roulette-result">Gire a roleta...</div>
+    <div class="roulette-btns">
+      <button class="btn-grunge primary" id="btn-spin" onclick="spinWheel()">▶ Girar</button>
+      <button class="btn-grunge" onclick="closeRoulette()">✕ Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="complete-overlay" id="complete-overlay">
+  <div class="complete-msg">⚔ Sessão Completa! ⚔</div>
+  <div class="complete-sub" id="complete-sub">Hora de colher sua recompensa</div>
+  <button class="btn-grunge primary" onclick="onCompleteRoulette()">🎲 Girar Roleta</button>
+  <button class="btn-grunge" onclick="closeComplete()">Ignorar</button>
+</div>
+
+<script src="app.js" defer ></script>
+</body>
+</html>
