@@ -255,6 +255,23 @@ function saveState() {
   try { localStorage.setItem('tarefa_state3', JSON.stringify(state)); } catch(e) {}
 }
 
+// autosize helper for textareas: keep 1-line height unless content wraps
+function autoSizeTextarea(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  const cs = window.getComputedStyle(el);
+  const lineHeight = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.2) || 18;
+  const scroll = el.scrollHeight;
+  const padding = parseFloat(cs.paddingTop || 0) + parseFloat(cs.paddingBottom || 0);
+  const single = Math.ceil(lineHeight + padding);
+  if (scroll > single + 2) {
+    const max = Math.ceil(lineHeight * 6 + padding);
+    el.style.height = Math.min(scroll, max) + 'px';
+  } else {
+    el.style.height = single + 'px';
+  }
+}
+
 // ═══════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════
@@ -293,7 +310,7 @@ function renderTodos() {
         <button class="todo-check${checkedClass}">${checkIcon}</button>
           <textarea rows="1" col="1" class="todo-name" placeholder="Nome do afazer...">${escHtml(todo.name)}</textarea>
         <button class="badge-btn badge-diff${grandeClass}">${diffText}</button>
-        <button class="badge-btn btn-add-sub">+ SUB</button>
+        <button class="badge-btn btn-add-sub">+</button>
         <button class="todo-del" title="Excluir">✕</button>
       </div>
       <div class="todo-children" style="display: ${isExpanded && hasChildren ? 'flex' : 'none'};"></div>
@@ -348,9 +365,10 @@ function renderTodos() {
       autoSizeTextarea(inp);
       saveState();
     };
-    // init autosize
-      // init autosize (defer to allow element to layout)
-      setTimeout(() => autoSizeTextarea(inp), 0);
+    // ensure left alignment and initialize autosize immediately (avoid flicker)
+    try { inp.style.textAlign = 'left'; autoSizeTextarea(inp); } catch(e) {}
+    // also defer one tick to catch layout changes
+    setTimeout(() => autoSizeTextarea(inp), 0);
 
     diff.onclick = () => {
       playSfx('botaoBase');
@@ -412,8 +430,12 @@ function createNewRow() {
   const newInp = div.querySelector('.todo-name');
   newInp.oninput = function() {
     autoSizeTextarea(this);
-    addTodoFromInput(this);
+    if (!this._created && this.value.trim()) {
+      this._created = true;
+      addTodoFromInput(this);
+    }
   };
+  try { newInp.style.textAlign = 'left'; autoSizeTextarea(newInp); } catch(e) {}
   setTimeout(() => autoSizeTextarea(newInp), 0);
   
   return div;

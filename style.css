@@ -40,13 +40,13 @@
   
   .todo-item-main { 
     display: grid; 
-    grid-template-columns: 24px 32px 1fr auto auto auto; 
+    grid-template-columns: 20px 28px 1fr auto auto auto; 
     align-items: center; 
     gap: 8px; 
     background: var(--panel); 
     border: 1px solid var(--border); 
     border-radius: 2px; 
-      padding: 10px 10px; 
+    padding: 8px 8px; 
     transition: border-color 0.2s; 
     width: 100%;
     box-sizing: border-box;
@@ -81,15 +81,15 @@
     padding-top: 0; padding-bottom: 0;
   }
   
-  .badge-btn { padding: 3px 8px; border-radius: 2px; border: 1px solid; font-size: 10px; letter-spacing: 1px; cursor: pointer; font-family: var(--font-mono); text-transform: uppercase; transition: all 0.15s; white-space: nowrap; }
-  .badge-diff { border-color: var(--rust); color: var(--rust2); background: transparent; }
+  .badge-btn { padding: 2px 6px; border-radius: 2px; border: 1px solid; font-size: 10px; letter-spacing: 1px; cursor: pointer; font-family: var(--font-mono); text-transform: uppercase; transition: all 0.12s; white-space: nowrap; }
+  .badge-diff { border-color: var(--rust); color: var(--rust2); background: transparent; font-size: 9px; padding: 5px 5px 5px 5px;}
   .badge-diff.grande { border-color: var(--red2); color: var(--red2); background: rgba(122,26,26,0.3); }
   .badge-diff:hover { opacity: 0.8; }
   
-  .btn-add-sub { border-color: var(--gold); color: var(--gold); background: transparent; margin-left: 4px; }
-  .btn-add-sub:hover { background: rgba(184,150,46,0.1); }
+  .btn-add-sub { border-color: var(--gold); color: var(--gold); background: transparent; margin-left: 2px; padding: 0px 4px; font-size: 1rem; }
+  .btn-add-sub:hover { background: rgba(184,150,46,0.12); }
   
-  .todo-del { background: transparent; border: 1px solid var(--border); color: var(--text3); width: 24px; height: 24px; border-radius: 2px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; margin-left: 4px; }
+  .todo-del { background: transparent; border: 1px solid var(--border); color: var(--text3); width: 20px; height: 20px; border-radius: 2px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.12s; flex-shrink: 0; margin-left: 2px; }
   .todo-del:hover { border-color: var(--rust2); color: var(--rust2); }
 
   /* AJUSTE ESSENCIAL DA MARGEM/PADDING DAS SUBTAREFAS COLAREM NA DIREITA */
@@ -110,12 +110,14 @@
   }
 
   /* Compact / mobile-friendly defaults */
-  @media (max-width: 480px) {
+  @media (max-width: 600px) {
     .todo-item-main { grid-template-columns: 20px 28px 1fr auto auto auto; padding: 8px 10px; }
     .todo-name { font-size: 13px; }
     .todo-children { padding-left: 16px; gap: 4px; }
     .main { padding: 12px 10px 40px; }
     .app-title { font-size: clamp(20px,8vw,36px); }
+    .todo-toggle, .todo-check { margin: 0;}
+    .todo-item-main { gap: 4px;}
   }
 
   /* Compact mode class (toggleable) */
