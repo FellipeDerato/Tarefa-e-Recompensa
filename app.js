@@ -220,7 +220,9 @@ let state = {
   pomodoroSecondsLeft: 25 * 60, pomodoroSessions: 0,
   customSmall: Array(6).fill(''), customLarge: Array(6).fill(''),
   compactUI: true,
-  config: { foco: 25, curta: 5, longa: 15 }
+  config: { foco: 25, curta: 5, longa: 15 },
+  coins: 0,
+  storedRoulettes: []
 };
 let pomodoroInterval = null;
 let pendingRewardSize = 'pequeno';
@@ -233,10 +235,11 @@ function loadState() {
   try {
     const p = JSON.parse(localStorage.getItem('tarefa_state3') || 'null');
     if (p) { 
-      state = { ...state, ...p }; 
+      state = { ...state, ...p };
       state.pomodoroRunning = false; 
       state.pomodoroSecondsLeft = state.config.foco * 60; 
     }
+    if (!state.storedRoulettes) state.storedRoulettes = [];
     ensureTreeStructure(state.todos);
   } catch(e) {}
 }
@@ -253,6 +256,21 @@ function ensureTreeStructure(arr) {
 
 function saveState() {
   try { localStorage.setItem('tarefa_state3', JSON.stringify(state)); } catch(e) {}
+}
+
+// --- Moedas (coins) ---
+function updateCoinDisplay() {
+  const el = document.getElementById('coin-count');
+  if (el) el.textContent = (state.coins || 0);
+}
+
+function awardCoins(n, reason) {
+  if (!n || n === 0) return;
+  state.coins = (state.coins || 0) + Math.floor(n);
+  saveState();
+  updateCoinDisplay();
+  try { playSfx('botaoBase'); } catch(e){}
+  // future: visual feedback / animation
 }
 
 // autosize helper for textareas: keep 1-line height unless content wraps
@@ -353,9 +371,14 @@ function renderTodos() {
     };
 
     chk.onclick = () => {
+      const wasDone = !!todo.done;
       todo.done = !todo.done;
       playSfx('checkbox');
-      if (todo.done) openRouletteWithSize(todo.diff);
+      if (!wasDone && todo.done) {
+        const amt = todo.diff === 'grande' ? 5 : 1;
+        awardCoins(amt, 'task_done');
+        openRouletteWithSize(todo.diff);
+      }
       saveState();
       renderTodos();
     };
@@ -524,6 +547,11 @@ function handlePhaseEnd() {
     const isLong = state.pomodoroSessions % 4 === 0;
     pendingRewardSize = isLong ? 'grande' : 'pequeno';
     state.pomodoroPhase = isLong ? 'longa' : 'curta';
+    // premiar moedas: tempo da tarefa + metade (arredondado pra cima) do tempo da recompensa
+    const taskMinutes = state.config.foco || 0;
+    const rewardMinutes = isLong ? (state.config.longa || 0) : (state.config.curta || 0);
+    const award = taskMinutes + Math.ceil((rewardMinutes) / 2);
+    awardCoins(award, 'pomodoro_end');
     showComplete(state.pomodoroPhase);
   } else {
     state.pomodoroPhase = 'foco';
@@ -614,6 +642,8 @@ function getRewardPool(size) {
 let rouletteRewards = [];
 let wheelAngle = 0;
 let wheelSpinning = false;
+let lastSpinIndex = null;
+let currentOpenRoulette = null; // { rewards, size, fromStoredIndex }
 
 function openRouletteWithSize(size) {
   rouletteRewards = getRewardPool(size);
@@ -623,6 +653,10 @@ function openRouletteWithSize(size) {
   document.getElementById('roulette-result').textContent = 'Gire a roleta...';
   document.getElementById('btn-spin').disabled = false;
   document.getElementById('btn-spin').textContent = '▶ Girar';
+  // mark current open roulette (not from stored)
+  currentOpenRoulette = { rewards: rouletteRewards.slice(), size: size, fromStoredIndex: null };
+  // show 'Guardar' option before spinning
+  try { const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '💾 Guardar'; closeBtn.dataset.store = '1'; } } catch(e){}
   document.getElementById('roulette-overlay').classList.add('open');
   drawWheel(wheelAngle);
 }
@@ -634,6 +668,66 @@ function closeRoulette() {
     rouletteOpenedFromComplete = false;
     if (state.autoAdvance) togglePomodoro();
   }
+}
+
+function closeOrStoreRoulette() {
+  const closeBtn = document.getElementById('btn-close');
+  if (closeBtn && closeBtn.dataset && closeBtn.dataset.store === '1') {
+    // store the currently open roulette (only if not from stored)
+    storeCurrentRoulette();
+  } else {
+    closeRoulette();
+  }
+}
+
+function storeCurrentRoulette() {
+  // only store if we have a current open roulette pool
+  if (!currentOpenRoulette || !Array.isArray(currentOpenRoulette.rewards) || currentOpenRoulette.rewards.length === 0) {
+    closeRoulette();
+    return;
+  }
+  try {
+    state.storedRoulettes = state.storedRoulettes || [];
+    state.storedRoulettes.push({ rewards: currentOpenRoulette.rewards.slice(), size: currentOpenRoulette.size, storedAt: Date.now() });
+    saveState();
+    updateRoletaButton();
+    // reset close button
+    const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; }
+    // close overlay and clear currentOpenRoulette
+    currentOpenRoulette = null;
+    closeRoulette();
+  } catch(e) { closeRoulette(); }
+}
+
+function updateRoletaButton() {
+  const btn = document.getElementById('btn-roleta-storage');
+  if (!btn) return;
+  const n = (state.storedRoulettes && state.storedRoulettes.length) || 0;
+  btn.textContent = `🎡 Roleta (${n})`;
+}
+
+function onStoredRoletaClick() {
+  const btn = document.getElementById('btn-roleta-storage');
+  const n = (state.storedRoulettes && state.storedRoulettes.length) || 0;
+  if (!n) { playSfx('botaoBase'); return; }
+  // peek last stored (do not remove yet) and open overlay so user can choose to spin or cancel
+  const idx = state.storedRoulettes.length - 1;
+  const obj = state.storedRoulettes[idx];
+  try {
+    rouletteRewards = obj.rewards.slice();
+    wheelAngle = 0;
+    lastSpinIndex = null;
+    // mark current open roulette as from stored (so spin will consume it)
+    currentOpenRoulette = { rewards: rouletteRewards.slice(), size: obj.size, fromStoredIndex: idx };
+    document.getElementById('roulette-title').textContent = '🎡 Roleta Guardada';
+    document.getElementById('roulette-result').textContent = 'Gire a roleta...';
+    document.getElementById('btn-spin').disabled = false;
+    document.getElementById('btn-spin').textContent = '▶ Girar';
+    // stored roleta cannot be 'guardada' again — close button acts as normal
+    const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; }
+    document.getElementById('roulette-overlay').classList.add('open');
+    drawWheel(wheelAngle);
+  } catch(e) { }
 }
 
 function drawWheel(angle) {
@@ -668,6 +762,20 @@ function spinWheel() {
   document.getElementById('btn-spin').disabled = true;
   document.getElementById('roulette-result').textContent = '...';
 
+  // If this spin is for a stored roulette, consume it now (only once)
+  if (currentOpenRoulette && typeof currentOpenRoulette.fromStoredIndex === 'number') {
+    const idx = currentOpenRoulette.fromStoredIndex;
+    if (state.storedRoulettes && state.storedRoulettes[idx]) {
+      state.storedRoulettes.splice(idx, 1);
+      saveState();
+      updateRoletaButton();
+      // avoid double-consuming
+      currentOpenRoulette.fromStoredIndex = null;
+    }
+  }
+  // once spin starts, cannot store this roulette anymore
+  try { const closeBtn = document.getElementById('btn-close'); if (closeBtn) { delete closeBtn.dataset.store; closeBtn.textContent = '✕ Fechar'; } } catch(e){}
+
   const n = rouletteRewards.length;
   const slice = (2 * Math.PI) / n;
   const targetIndex = Math.floor(Math.random() * n);
@@ -694,6 +802,14 @@ function spinWheel() {
     document.getElementById('btn-spin').disabled = false;
     document.getElementById('btn-spin').textContent = '↺ Girar de Novo';
     document.getElementById('roulette-result').textContent = '🎲 ' + rouletteRewards[targetIndex];
+    lastSpinIndex = targetIndex;
+    // after spinning, do not offer 'Guardar' (per design). ensure close button is normal
+    try {
+      const closeBtn = document.getElementById('btn-close');
+      if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; }
+    } catch(e){}
+    // clear temporary open roulette (can't be stored now)
+    currentOpenRoulette = null;
   }
   requestAnimationFrame(animate);
 }
@@ -801,6 +917,18 @@ loadState();
 renderTodos();
 renderConfig();
 updatePomodoroDisplay();
+updateCoinDisplay();
+updateRoletaButton();
+// wire roleta stored button
+try { const rb = document.getElementById('btn-roleta-storage'); if (rb) rb.onclick = onStoredRoletaClick; } catch(e) {}
+
+// Expose state and common APIs to other modules (shop.js expects these)
+try {
+  window.state = state;
+  window.saveState = saveState;
+  window.updateCoinDisplay = updateCoinDisplay;
+  window.awardCoins = awardCoins;
+} catch(e) {}
 
 // Register service worker for PWA (GitHub Pages)
 if ('serviceWorker' in navigator) {

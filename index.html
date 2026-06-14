@@ -24,6 +24,16 @@
   <div class="divider-skull">✦ &nbsp; TRABALHE OU SOFRA &nbsp; ✦</div>
 </header>
 
+<div class="coin-bar">
+  <div class="coin-display">💰 <span id="coin-count">0</span></div>
+  <div class="coin-actions">
+      <button class="mini-btn" id="btn-inv" title="Inventário" onclick="(console.log('btn-inv clicked'), window.openInvUI ? window.openInvUI() : console.log('openInvUI missing'))">Inventário</button>
+      <button class="mini-btn" id="btn-shop" title="Loja" onclick="(console.log('btn-shop clicked'), window.openShopUI ? window.openShopUI() : console.log('openShopUI missing'))">Loja</button>
+      <button class="mini-btn" id="btn-upg" title="Upgrades">Upgrades</button>
+      <button class="mini-btn" id="btn-roleta-storage" title="Roletas">🎡 Roleta (0)</button>
+  </div>
+</div>
+
 <nav class="nav-tabs">
   <button class="nav-tab active" onclick="switchTab('afazeres',this)">☰ Afazeres</button>
   <button class="nav-tab" onclick="switchTab('pomodoro',this)">⏱ Pomodoro</button>
@@ -145,6 +155,28 @@
 
 </main>
 
+<!-- Shop overlay -->
+<div class="shop-overlay" id="shop-overlay">
+  <div class="roulette-box shop-box" id="shop-box">
+    <div class="shop-header">
+      <div class="roulette-title">Loja</div>
+      <button class="btn-grunge mini" id="shop-close">✕</button>
+    </div>
+    <div id="shop-content" class="shop-body" style="min-height:120px"></div>
+  </div>
+</div>
+
+<!-- Inventory overlay -->
+<div class="shop-overlay" id="inv-overlay">
+  <div class="roulette-box shop-box" id="inv-box">
+    <div class="shop-header">
+      <div class="roulette-title">Inventário</div>
+      <button class="btn-grunge mini" id="inv-close">✕</button>
+    </div>
+    <div id="inv-content" class="inv-body" style="min-height:180px;padding:8px"></div>
+  </div>
+</div>
+
 <div class="roulette-overlay" id="roulette-overlay">
   <div class="roulette-box">
     <div class="roulette-title" id="roulette-title">🎲 Girando o Destino...</div>
@@ -156,7 +188,7 @@
     <div class="roulette-result" id="roulette-result">Gire a roleta...</div>
     <div class="roulette-btns">
       <button class="btn-grunge primary" id="btn-spin" onclick="spinWheel()">▶ Girar</button>
-      <button class="btn-grunge" onclick="closeRoulette()">✕ Fechar</button>
+      <button class="btn-grunge" id="btn-close" onclick="closeOrStoreRoulette()">✕ Fechar</button>
     </div>
   </div>
 </div>
@@ -169,5 +201,14 @@
 </div>
 
 <script src="app.js" defer ></script>
+<script src="shop.js" defer></script>
+<script>
+  // debug helper: show an alert for uncaught errors so they are visible even if console is filtered
+  window.onerror = function(message, source, lineno, colno, error) {
+    try { alert('JS error: ' + message + '\nAt: ' + source + ':' + lineno + ':' + colno); } catch(e){}
+    console.error('window.onerror', message, source, lineno, colno, error);
+  };
+  window.addEventListener('unhandledrejection', function(ev) { try { alert('Unhandled Promise Rejection: ' + (ev.reason && ev.reason.message ? ev.reason.message : ev.reason)); } catch(e){} console.error('unhandledrejection', ev); });
+</script>
 </body>
 </html>
