@@ -1,31 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <rect width="192" height="192" fill="#000000" />
-  
-  <g transform="translate(96, 96) scale(0.375)">
-    <circle r="190" fill="none" stroke="#6b5321" stroke-width="3" opacity="0.4" />
-    <circle r="182" fill="none" stroke="#a6802f" stroke-width="2" stroke-dasharray="6,6" opacity="0.7" />
-    <circle r="174" fill="none" stroke="#e0b034" stroke-width="4" opacity="0.15" />
+<svg id="Camada_1" data-name="Camada 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="0 0 192.75 192.75">
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+  .cls-1{fill:url(#Gradiente_sem_nome_4);}.cls-2{fill:#aa7918;}.cls-3{opacity:0.25;}.cls-4{fill:none;stroke:#aa7918;stroke-miterlimit:10;stroke-width:18px;}.cls-5{font-size:307.44px;fill:#ffeb99;font-family: 'Special Elite', cursive;}.cls-6{fill:url(#Gradiente_sem_nome_18);}.cls-7{fill:url(#Gradiente_sem_nome_18-2);}.cls-8{fill:url(#Gradiente_sem_nome_18-3);}.cls-9{fill:url(#Gradiente_sem_nome_18-4);}
+            .cls-1 {
+                fill: url(#Gradiente_sem_nome_4);
+            }
 
-    <path d="M -130,-40 C -160,-10 -150,40 -110,70 C -125,40 -120,0 -90,-20 Z" fill="#a6802f" opacity="0.6"/>
-    <path d="M 130,-40 C 160,-10 150,40 110,70 C 125,40 120,0 90,-20 Z" fill="#a6802f" opacity="0.6"/>
-    
-    <path d="M 0,-155 L 8,-147 L 0,-139 L -8,-147 Z" fill="#e0b034" />
-    <path d="M 0,155 L 8,147 L 0,139 L -8,147 Z" fill="#a6802f" />
+            .cls-2 {
+                fill: #aa7918;
+            }
 
-    <path d="M-15,40 C-35,40 -45,23 -45,3 C-45,-12 -33,-25 -15,-32 C-12,-33 -10,-31 -10,-28 C-13,-18 -15,-5 -6,2 C-11,-15 -4,-28 10,-35 C23,-42 35,-32 32,-15 C30,-3 18,12 2,22 C12,31 28,23 35,13 C37,10 41,11 40,14 C34,29 15,40 -2,40 C-6,40 -11,40 -15,40 Z M-22,3 C-22,17 -13,24 -4,24 C4,24 2,-2 -11,-4 C-18,0 -22,0 -22,3 Z M12,-22 C5,-18 3,-4 10,2 C17,-4 21,-14 16,-20 C14,-22 13,-22 12,-22 Z" fill="#b84a26" opacity="0.85" transform="scale(1.5)" />
+            .cls-3 {
+                opacity: 0.25;
+            }
 
-    <g id="letter-t" transform="translate(-45, -15)">
-      <path d="M -45,-55 L 45,-55 L 45,-25 L 15,-25 L 15,55 L -15,55 L -15,-25 L -45,-25 Z" fill="#1a1306" transform="translate(3, 4)"/>
-      <path d="M -45,-55 L 45,-55 L 45,-25 L 15,-25 L 15,55 L -15,55 L -15,-25 L -45,-25 Z" fill="#d1a136" stroke="#544011" stroke-width="2"/>
-      <line x1="-35" y1="-40" x2="35" y2="-40" stroke="#40300c" stroke-width="3"/>
-    </g>
+            .cls-4 {
+                fill: none;
+                stroke: #aa7918;
+                stroke-miterlimit: 10;
+                stroke-width: 6.78px;
+            }
 
-    <g id="letter-r" transform="translate(45, 25)">
-      <path d="M -35,-55 L 15,-55 C 35,-55 45,-40 45,-20 C 45,-2 30,10 10,10 L 25,55 L -10,55 L -23,15 L -35,15 L -35,55 L -55,55 L -55,-55 Z" fill="#1a1306" transform="translate(3, 4)"/>
-      
-      <path fill-rule="evenodd" d="M -35,-55 L 15,-55 C 35,-55 45,-40 45,-20 C 45,-2 30,10 10,10 L 25,55 L -10,55 L -23,15 L -15,15 L -15,-35 L -35,-35 L -35,55 L -55,55 L -55,-55 Z M -15,-15 L 5,-15 C 12,-15 17,-12 17,-5 C 17,2 12,5 5,5 L -15,5 Z" fill="#e6b33c" stroke="#544011" stroke-width="2"/>
-      
-      <line x1="-25" y1="-45" x2="5" y2="-45" stroke="#40300c" stroke-width="3"/>
-    </g>
-  </g>
+            .cls-5 {
+                font-size: 115.74px;
+                fill: #ffeb99;
+                font-family: SpecialElite-Regular, Special Elite;
+            }
+
+            .cls-6 {
+                fill: url(#Gradiente_sem_nome_18);
+            }
+
+            .cls-7 {
+                fill: url(#Gradiente_sem_nome_18-2);
+            }
+
+            .cls-8 {
+                fill: url(#Gradiente_sem_nome_18-3);
+            }
+
+            .cls-9 {
+                fill: url(#Gradiente_sem_nome_18-4);
+            }
+        </style>
+        <radialGradient id="Gradiente_sem_nome_4" cx="96.38" cy="96.38" r="93.36" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#4c3d00" />
+            <stop offset="0.05" stop-color="#443700" />
+            <stop offset="0.3" stop-color="#271f00" />
+            <stop offset="0.54" stop-color="#110e00" />
+            <stop offset="0.78" stop-color="#040300" />
+            <stop offset="1" />
+        </radialGradient>
+        <linearGradient id="Gradiente_sem_nome_18" x1="84.19" y1="54.5" x2="84.19" y2="31.27"
+            gradientTransform="translate(-11.75 180.25) rotate(-90)" gradientUnits="userSpaceOnUse">
+            <stop offset="0.05" stop-color="#ffeb99" stop-opacity="0" />
+            <stop offset="0.25" stop-color="#ffeb99" stop-opacity="0.29" />
+            <stop offset="0.45" stop-color="#ffeb99" stop-opacity="0.55" />
+            <stop offset="0.63" stop-color="#ffeb99" stop-opacity="0.74" />
+            <stop offset="0.78" stop-color="#ffeb99" stop-opacity="0.88" />
+            <stop offset="0.91" stop-color="#ffeb99" stop-opacity="0.97" />
+            <stop offset="0.99" stop-color="#ffeb99" />
+        </linearGradient>
+        <linearGradient id="Gradiente_sem_nome_18-2" x1="84.49" y1="54.95" x2="84.49" y2="31.72"
+            gradientTransform="translate(180.25 203.75) rotate(180)" xlink:href="#Gradiente_sem_nome_18" />
+        <linearGradient id="Gradiente_sem_nome_18-3" x1="83.74" y1="54.81" x2="83.74" y2="31.58"
+            gradientTransform="translate(11.75 -11.75)" xlink:href="#Gradiente_sem_nome_18" />
+        <linearGradient id="Gradiente_sem_nome_18-4" x1="84.05" y1="55.25" x2="84.05" y2="32.03"
+            gradientTransform="translate(203.75 11.75) rotate(90)" xlink:href="#Gradiente_sem_nome_18" />
+    </defs>
+    <title>icon-192</title>
+    <rect class="cls-1" x="3.01" y="3.01" width="186.73" height="186.73" rx="34.64" />
+    <path class="cls-2"
+        d="M154.35,5.58A31.66,31.66,0,0,1,186,37.2V154.66a31.66,31.66,0,0,1-31.63,31.62H36.89A31.66,31.66,0,0,1,5.27,154.66V37.2A31.66,31.66,0,0,1,36.89,5.58H154.35m0-6H36.89A37.64,37.64,0,0,0-.75,37.2V154.66a37.65,37.65,0,0,0,37.64,37.65H154.35A37.65,37.65,0,0,0,192,154.66V37.2A37.65,37.65,0,0,0,154.35-.44Z"
+        transform="translate(0.75 0.44)" />
+    <g class="cls-3">
+        <line class="cls-4" y1="160.63" x2="192.75" y2="160.63" />
+        <line class="cls-4" y1="128.5" x2="192.75" y2="128.5" />
+        <line class="cls-4" y1="96.38" x2="192.75" y2="96.38" />
+        <line class="cls-4" y1="64.25" x2="192.75" y2="64.25" />
+        <line class="cls-4" y1="32.13" x2="192.75" y2="32.13" />
+    </g><text class="cls-5" transform="translate(25.14 133.68)">TR</text>
+    <path class="cls-6" d="M43.29,92.68v6.77H22.63a3.39,3.39,0,0,1-3.39-3.39h0a3.38,3.38,0,0,1,3.39-3.38Z"
+        transform="translate(0.75 0.44)" />
+    <path class="cls-7" d="M92.37,148.26h6.77v20.66a3.38,3.38,0,0,1-3.38,3.39h0a3.39,3.39,0,0,1-3.39-3.39Z"
+        transform="translate(0.75 0.44)" />
+    <path class="cls-8" d="M98.88,43.6H92.1V22.94a3.39,3.39,0,0,1,3.39-3.39h0a3.39,3.39,0,0,1,3.39,3.39Z"
+        transform="translate(0.75 0.44)" />
+    <path class="cls-9" d="M148,99.19V92.41h20.66A3.39,3.39,0,0,1,172,95.8h0a3.39,3.39,0,0,1-3.39,3.39Z"
+        transform="translate(0.75 0.44)" />
 </svg>
