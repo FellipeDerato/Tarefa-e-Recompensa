@@ -141,6 +141,8 @@ document.addEventListener('click', function(ev){
     // wire wrappers
     makeScrollable(consumableRow, cleft, cright);
     makeScrollable(equipRow, eleft, eright);
+
+    // (no floating focus — hover handled via subtle CSS shadow)
   }
 
   function createItemCard(item, type) {
@@ -168,24 +170,26 @@ document.addEventListener('click', function(ev){
     // update selection highlight
     $all('.shop-card').forEach(c => c.classList.toggle('selected', c.dataset.id === id));
     const box = document.getElementById('shop-detail-box');
+    // three-column layout: image | info | vertical actions (buy/close)
     box.innerHTML = `
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <img src="${item.img}" class="shop-large" />
-        <div style="flex:1">
+      <div class="inv-detail-row" style="display:flex;gap:12px;align-items:flex-start">
+        <div class="inv-detail-img"><img src="${item.img}" class="shop-large" /></div>
+        <div class="inv-detail-info" style="flex:1">
           <h3>${item.name}</h3>
           <p class="shop-desc">${item.desc}</p>
         </div>
-      </div>
-      <div class="shop-actions">
-        <button class="btn-grunge primary" id="shop-buy">Comprar (${item.price} 💰)</button>
-        <button class="btn-grunge" id="shop-close-detail">Fechar</button>
+        <div class="inv-detail-actions" style="display:flex;flex-direction:column;gap:10px;min-width:120px">
+        </div>
       </div>
     `;
-    // attach buy/close
-    const buy = document.getElementById('shop-buy');
+    const actions = box.querySelector('.inv-detail-actions'); if (!actions) return;
+    const buy = document.createElement('button'); buy.className = 'btn-grunge primary'; buy.id = 'shop-buy'; buy.textContent = `Comprar (${item.price} 💰)`;
     if (item.bought) { buy.disabled = true; buy.textContent = 'Comprado'; }
     buy.onclick = () => doBuy(item);
-    document.getElementById('shop-close-detail').onclick = () => { box.innerHTML = '<div id="shop-detail-empty">Selecione um item para ver detalhes</div>'; $all('.shop-card').forEach(c => c.classList.remove('selected')); };
+    const closeBtn = document.createElement('button'); closeBtn.className = 'btn-grunge'; closeBtn.id = 'shop-close-detail'; closeBtn.textContent = 'Fechar';
+    closeBtn.onclick = () => { box.innerHTML = '<div id="shop-detail-empty">Selecione um item para ver detalhes</div>'; $all('.shop-card').forEach(c => c.classList.remove('selected')); };
+    actions.appendChild(buy);
+    actions.appendChild(closeBtn);
   }
 
   function doBuy(item) {
@@ -199,10 +203,26 @@ document.addEventListener('click', function(ev){
     if (window.updateCoinDisplay) window.updateCoinDisplay();
     if (window.saveState) window.saveState();
 
+    // visual feedback: pulse the card and coin display
+    try {
+      const cardEl = document.querySelector('.shop-card[data-id="' + item.id + '"]');
+      if (cardEl) {
+        cardEl.classList.add('pulse-buy');
+        setTimeout(() => cardEl.classList.remove('pulse-buy'), 700);
+      }
+      const coinEl = document.querySelector('.coin-display'); if (coinEl) { coinEl.classList.add('coin-pulse'); setTimeout(()=>coinEl.classList.remove('coin-pulse'),700); }
+    } catch(e) {}
+
     // consumable: add to inventory but keep focused (user must manually unfocus)
     if (item.id.startsWith('c_')) {
       window.state.inventory = window.state.inventory || { items: [], equipmentSlots: Array(5).fill(null) };
-      window.state.inventory.items.push({ id: item.id, name: item.name, qty: 1, desc: item.desc });
+      // if same item exists, increment qty instead of adding duplicate
+      const existing = (window.state.inventory.items || []).find(i => i.id === item.id);
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+      } else {
+        window.state.inventory.items.push({ id: item.id, name: item.name, qty: 1, desc: item.desc });
+      }
       if (window.saveState) window.saveState();
       renderInventoryGrid();
       // keep focus
@@ -253,7 +273,7 @@ document.addEventListener('click', function(ev){
       s.innerHTML = `
         <div class="inv-slot-inner">
           <img src="${(it.img||'media/placeholder-64.png')}" class="shop-thumb"/>
-          <div class="inv-slot-name">${it.name}${it.qty && it.qty>1? ' x'+it.qty : ''}</div>
+          <div class="inv-slot-name">${it.name}</div>
         </div>
       `;
       grid.appendChild(s);
@@ -310,7 +330,7 @@ document.addEventListener('click', function(ev){
       <div class="inv-detail-row" style="display:flex;gap:12px;align-items:flex-start">
         <div class="inv-detail-img"><img src="${it.img || 'media/placeholder-64.png'}" class="shop-large" /></div>
         <div class="inv-detail-info" style="flex:1">
-          <h3>${it.name}</h3>
+          <h3>${it.name}${it.qty && it.qty>1? ' ('+it.qty+')' : ''}</h3>
           <p class="shop-desc">${it.desc || ''}</p>
         </div>
         <div class="inv-detail-actions" style="display:flex;flex-direction:column;gap:10px;min-width:120px">
@@ -377,5 +397,18 @@ document.addEventListener('click', function(ev){
     const ib = document.getElementById('btn-inv'); if (ib) ib.onclick = openInventory;
     const sclose = document.getElementById('shop-close'); if (sclose) sclose.onclick = closeShop;
     const iclose = document.getElementById('inv-close'); if (iclose) iclose.onclick = closeInventory;
+    // Play click sound for main UI and overlay interactions
+    document.addEventListener('click', (ev) => {
+      try {
+        const t = ev.target;
+        const tag = (t && t.tagName) ? t.tagName.toUpperCase() : '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        // actionable selectors: top bar mini buttons, grunge buttons, item cards/slots, row arrows
+        const actionable = (t.closest && (t.closest('.mini-btn') || t.closest('.btn-grunge') || t.closest('.shop-card') || t.closest('.inv-slot') || t.closest('.shop-row-btn') || t.closest('#btn-roleta-storage')));
+        if (actionable) {
+          try { if (typeof playSfx === 'function') playSfx('botaoBase'); } catch(e){}
+        }
+      } catch(e) {}
+    });
   });
 })();
