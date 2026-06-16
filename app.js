@@ -29,6 +29,7 @@ let awaitingReward = false;
 let rouletteOpenedFromComplete = false;
 let countdownPlayed = false;
 let lastTeclaKey = null;
+let lastInventoryItems = []; // Guarda o snapshot do inventário para detectar consumos
 
 function fxVol()    { return vol.geral * vol.fx; }
 function timerVol() { return vol.geral * vol.timer; }
@@ -45,7 +46,6 @@ function playSfx(key) {
 const teclaKeys = ['tecla1','tecla2','tecla3','tecla4','tecla5'];
 function playTecla() {
   if (!teclaKeys.length) return;
-  // pick random key different from last
   let idx = Math.floor(Math.random() * teclaKeys.length);
   if (teclaKeys.length > 1) {
     let attempts = 0;
@@ -59,7 +59,6 @@ function playTecla() {
   try {
     const snd = new Audio(audioFiles[key]);
     snd.volume = fxVol();
-    // small pitch variance
     try { snd.playbackRate = 0.95 + Math.random() * 0.12; } catch(e) {}
     snd.play().catch(() => {});
   } catch(e){}
@@ -108,6 +107,13 @@ function scheduleAmbSounds() {
 }
 
 function scheduleOne(key, setter) {
+  // Mecânica do Equipamento: Alternador Gasto (e_alternador_gasto)
+  if (window.temEquipamento && window.temEquipamento('e_alternador_gasto')) {
+    if (Math.random() <= 0.20) { // 20% de chance ao agendar sons ambientes
+      window.awardCoins(1);
+      if (window.showToast) window.showToast('Alternador Gasto gerou +1 moeda de sucata!', 'success');
+    }
+  }
   const delay = 15000 + Math.random() * 45000;
   const t = setTimeout(() => {
     try {
@@ -177,7 +183,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ═══════════════════════════════════════════════════════
-// STATE
+// STATE & DEFAULT POOLS
 // ═══════════════════════════════════════════════════════
 const DEFALT_GOOD_SMALL = [
   "Assista algo que te agrade (sem ser no formato short).",
@@ -195,8 +201,6 @@ const DEFALT_GOOD_LARGE = [
   "Assista um Vídeo Longo.",
   "Tome um Banho gostoso."
 ];
-
-// Sofrimentos / recompensas ruins (pequenas e grandes)
 const DEFALT_BAD_SMALL = [
   "Apague 10 arquivos inúteis do computador.",
   "Arrumar uma pequena bagunça.",
@@ -222,7 +226,15 @@ let state = {
   compactUI: true,
   config: { foco: 25, curta: 5, longa: 15 },
   coins: 0,
-  storedRoulettes: []
+  storedRoulettes: [],
+  tempModifiers: {
+    fitaBloqueioTimer: false,
+    cafeSemPausa: false,
+    glicoseDobroGrande: false,
+    giletePenalidade: false,
+    bateriaBonus: false
+  },
+  inventory: { items: [], equipmentSlots: Array(5).fill(null) }
 };
 let pomodoroInterval = null;
 let pendingRewardSize = 'pequeno';
@@ -230,6 +242,27 @@ let pendingRewardSize = 'pequeno';
 function generateId() {
   return 'todo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
+
+// Helper global para checar se um equipamento específico está ativo nos slots de uso
+function temEquipamento(id) {
+  if (!state.inventory || !Array.isArray(state.inventory.equipmentSlots)) return false;
+  return state.inventory.equipmentSlots.some(slot => slot && slot.id === id);
+}
+window.temEquipamento = temEquipamento;
+
+// Toast Notification Centralizado
+function showToast(msg, type = 'default', timeout = 2800) {
+  if (!document.getElementById('toast-container')) {
+    const t = document.createElement('div'); t.id = 'toast-container'; document.body.appendChild(t);
+  }
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div'); 
+  el.className = 'toast ' + (type === 'success' ? 'success' : type === 'error' ? 'error' : ''); 
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(()=>el.remove(), 300); }, timeout);
+}
+window.showToast = showToast;
 
 function loadState() {
   try {
@@ -240,7 +273,12 @@ function loadState() {
       state.pomodoroSecondsLeft = state.config.foco * 60; 
     }
     if (!state.storedRoulettes) state.storedRoulettes = [];
+    if (!state.tempModifiers) state.tempModifiers = {};
+    if (!state.inventory) state.inventory = { items: [], equipmentSlots: Array(5).fill(null) };
     ensureTreeStructure(state.todos);
+    
+    // Alimenta o primeiro snapshot do inventário para evitar falso-positivos
+    lastInventoryItems = JSON.parse(JSON.stringify(state.inventory.items || []));
   } catch(e) {}
 }
 
@@ -254,8 +292,141 @@ function ensureTreeStructure(arr) {
   });
 }
 
+// Monitorador inteligente de consumo de itens do inventário
+function checkInventoryConsumption() {
+  if (!state.inventory || !state.inventory.items) {
+    lastInventoryItems = [];
+    return;
+  }
+  const lastMap = {};
+  lastInventoryItems.forEach(it => { lastMap[it.id] = (lastMap[it.id] || 0) + (it.qty || 1); });
+
+  const currentMap = {};
+  state.inventory.items.forEach(it => { currentMap[it.id] = (currentMap[it.id] || 0) + (it.qty || 1); });
+
+  Object.keys(lastMap).forEach(id => {
+    const lastQty = lastMap[id];
+    const currentQty = currentMap[id] || 0;
+    if (currentQty < lastQty) {
+      const timesConsumed = lastQty - currentQty;
+      for (let i = 0; i < timesConsumed; i++) {
+        executarEfeitoConsumivel(id);
+      }
+    }
+  });
+  lastInventoryItems = JSON.parse(JSON.stringify(state.inventory.items));
+}
+
 function saveState() {
-  try { localStorage.setItem('tarefa_state3', JSON.stringify(state)); } catch(e) {}
+  try { 
+    checkInventoryConsumption();
+    localStorage.setItem('tarefa_state3', JSON.stringify(state)); 
+  } catch(e) {}
+}
+
+// Execução imediata das mecânicas ativas do jogo
+function executarEfeitoConsumivel(id) {
+  if (!state.tempModifiers) state.tempModifiers = {};
+  
+  switch(id) {
+    case 'c_ficha':
+      openRouletteWithSize(state.pomodoroPhase === 'longa' ? 'grande' : 'pequeno');
+      showToast('Ficha Falsificada: Destino invocado na hora!', 'success');
+      break;
+      
+    case 'c_triagem_sucata':
+      state.todos.sort((a, b) => {
+        const aG = a.diff === 'grande' ? 1 : 0;
+        const bG = b.diff === 'grande' ? 1 : 0;
+        return bG - aG;
+      });
+      renderTodos();
+      showToast('Triagem de Sucata: Modificadores grandes priorizados no topo!', 'success');
+      break;
+      
+    case 'c_adrenalina':
+      state.pomodoroSecondsLeft += 5 * 60;
+      updatePomodoroDisplay();
+      showToast('Injetor de Adrenalina: +5 minutos injetados no timer!', 'success');
+      break;
+      
+    case 'c_fio_cobre':
+      state.pomodoroSecondsLeft = Math.max(0, state.pomodoroSecondsLeft - 3 * 60);
+      updatePomodoroDisplay();
+      showToast('Fio Desencapado: Curto-circuito avançou o timer em 3 min!', 'success');
+      if (state.pomodoroSecondsLeft === 0 && state.pomodoroRunning) {
+        clearInterval(pomodoroInterval);
+        state.pomodoroRunning = false;
+        playTimerFim();
+        handlePhaseEnd();
+      }
+      break;
+      
+    case 'c_fita':
+      state.tempModifiers.fitaBloqueioTimer = true;
+      showToast('Fita Isolante: O próximo segundo da contagem foi remendado e travado!', 'success');
+      break;
+      
+    case 'c_cafe':
+      state.tempModifiers.cafeSemPausa = true;
+      showToast('Café Frio de Ontem: Termine o foco sem pausar para dobrar as recompensas!', 'success');
+      break;
+      
+    case 'c_glicose':
+      state.tempModifiers.glicoseDobroGrande = true;
+      showToast('Injeção de Glicose: Próxima tarefa GRANDE dará o dobro de moedas!', 'success');
+      break;
+      
+    case 'c_oleo_brilhante':
+      {
+        let applied = false;
+        const applyGlow = (list) => {
+          for (let t of list) {
+            if (!t.done && !t.glow) { t.glow = true; applied = true; return true; }
+            if (t.children && applyGlow(t.children)) return true;
+          }
+          return false;
+        };
+        applyGlow(state.todos);
+        if (applied) {
+          renderTodos();
+          showToast('Óleo Fluorescente: Uma tarefa agora está brilhando (+3 moedas)!', 'success');
+        } else {
+          showToast('Nenhuma tarefa pendente para fazer brilhar!', 'error');
+        }
+      }
+      break;
+      
+    case 'c_relogio_vapor':
+      {
+        let applied = false;
+        const applyDeadline = (list) => {
+          for (let t of list) {
+            if (!t.done && !t.deadline) { t.deadline = Date.now() + 25 * 60 * 1000; applied = true; return true; }
+            if (t.children && applyDeadline(t.children)) return true;
+          }
+          return false;
+        };
+        applyDeadline(state.todos);
+        if (applied) {
+          renderTodos();
+          showToast('Cronômetro a Vapor: Prazo de 25 min adicionado a uma tarefa (+Dobro)!', 'success');
+        } else {
+          showToast('Nenhuma tarefa pendente para estipular prazo!', 'error');
+        }
+      }
+      break;
+      
+    case 'c_gilete':
+      state.tempModifiers.giletePenalidade = true;
+      showToast('Gilete Enferrujada: Sangramento ativo. Próximos ganhos reduzidos pela metade!', 'error');
+      break;
+      
+    case 'c_bateria':
+      state.tempModifiers.bateriaBonus = true;
+      showToast('Bateria de Carro Velha: Carga total! Próximo ganho terá +50% de moedas!', 'success');
+      break;
+  }
 }
 
 // --- Moedas (coins) ---
@@ -265,15 +436,33 @@ function updateCoinDisplay() {
 }
 
 function awardCoins(n, reason) {
-  if (!n || n === 0) return;
-  state.coins = (state.coins || 0) + Math.floor(n);
+  let amt = n;
+  
+  // Ganchos de consumíveis temporários ativos
+  if (state && state.tempModifiers) {
+    if (state.tempModifiers.giletePenalidade) {
+      amt = Math.floor(amt * 0.5);
+      state.tempModifiers.giletePenalidade = false; // consome flag
+    }
+    if (state.tempModifiers.bateriaBonus) {
+      amt = Math.floor(amt * 1.5);
+      state.tempModifiers.bateriaBonus = false; // consome flag
+    }
+  }
+
+  // Mecânica do Equipamento: Pistão Carbonizado (e_pistao_carbonizado)
+  if (temEquipamento('e_pistao_carbonizado')) {
+    amt += 1; // +1 fixo por ganho de moedas
+  }
+
+  if (!amt || amt === 0) return;
+  state.coins = (state.coins || 0) + Math.floor(amt);
   saveState();
   updateCoinDisplay();
   try { playSfx('botaoBase'); } catch(e){}
-  // future: visual feedback / animation
 }
 
-// autosize helper for textareas: keep 1-line height unless content wraps
+// autosize helper para textareas
 function autoSizeTextarea(el) {
   if (!el) return;
   el.style.height = 'auto';
@@ -322,11 +511,24 @@ function renderTodos() {
     const grandeClass = todo.diff === 'grande' ? ' grande' : '';
     const diffText = todo.diff === 'grande' ? 'GRANDE' : 'PEQUENO';
 
+    // UI Feedback visual para o Óleo Fluorescente (glow) e Cronômetro (deadline)
+    let glowStyle = todo.glow ? ' box-shadow: 0 0 10px #b8962e; border: 1px dashed #b8962e;' : '';
+    let deadlineText = '';
+    if (todo.deadline && !todo.done) {
+      const minutesLeft = Math.ceil((todo.deadline - Date.now()) / 60000);
+      deadlineText = minutesLeft > 0 
+        ? ` <span class="badge-btn" style="background:#8b3a1a; cursor:default; font-size:10px;">⏱ ${minutesLeft}m</span>`
+        : ` <span class="badge-btn" style="background:#555; cursor:default; font-size:10px;">⏱ Expirado</span>`;
+    }
+
     node.innerHTML = `
-      <div class="todo-item-main">
+      <div class="todo-item-main" style="${glowStyle}">
         <button class="todo-toggle" style="${hasChildren ? '' : 'cursor:default; opacity:0.4'}">${toggleIcon}</button>
         <button class="todo-check${checkedClass}">${checkIcon}</button>
+        <div style="flex:1; display:flex; align-items:center;">
           <textarea rows="1" col="1" class="todo-name" placeholder="Nome do afazer...">${escHtml(todo.name)}</textarea>
+          ${deadlineText}
+        </div>
         <button class="badge-btn badge-diff${grandeClass}">${diffText}</button>
         <button class="badge-btn btn-add-sub">+</button>
         <button class="todo-del" title="Excluir">✕</button>
@@ -342,25 +544,6 @@ function renderTodos() {
     const del = node.querySelector('.todo-del');
     const childrenContainer = node.querySelector('.todo-children');
 
-    // autosize helper for textareas: keep 1-line height unless content wraps
-    function autoSizeTextarea(el) {
-      if (!el) return;
-      el.style.height = 'auto';
-      const cs = window.getComputedStyle(el);
-      const lineHeight = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.2) || 18;
-      const scroll = el.scrollHeight;
-      const padding = parseFloat(cs.paddingTop || 0) + parseFloat(cs.paddingBottom || 0);
-      const single = Math.ceil(lineHeight + padding);
-      if (scroll > single + 2) {
-        // content wrapped to multiple lines -> expand to fit (limit to 6 lines)
-        const max = Math.ceil(lineHeight * 6 + padding);
-        el.style.height = Math.min(scroll, max) + 'px';
-      } else {
-        // keep single-line height
-        el.style.height = single + 'px';
-      }
-    }
-
     tgl.onclick = () => {
       if (hasChildren) {
         todo.expanded = !isExpanded;
@@ -374,10 +557,47 @@ function renderTodos() {
       const wasDone = !!todo.done;
       todo.done = !todo.done;
       playSfx('checkbox');
+      
       if (!wasDone && todo.done) {
-        const amt = todo.diff === 'grande' ? 5 : 1;
+        let amt = todo.diff === 'grande' ? 5 : 1;
+
+        // Mecânica do Consumível: Injeção de Glicose (c_glicose)
+        if (state.tempModifiers && state.tempModifiers.glicoseDobroGrande && todo.diff === 'grande') {
+          amt *= 2;
+          state.tempModifiers.glicoseDobroGrande = false;
+          showToast('Injeção de Glicose: Ganho dobrado na tarefa grande!', 'success');
+        }
+
+        // Mecânica do Consumível: Óleo Fluorescente (glow)
+        if (todo.glow) {
+          amt += 3;
+          todo.glow = false;
+          showToast('Óleo Fluorescente: +3 moedas coletadas do brilho!', 'success');
+        }
+
+        // Mecânica do Consumível: Cronômetro a Vapor (deadline)
+        if (todo.deadline) {
+          if (Date.now() <= todo.deadline) {
+            amt *= 2;
+            showToast('Cronômetro a Vapor: Concluída no prazo! Ganhos dobrados!', 'success');
+          } else {
+            showToast('Cronômetro a Vapor: Fora do prazo. Bônus expirado.', 'error');
+          }
+          todo.deadline = null;
+        }
+
         awardCoins(amt, 'task_done');
-        openRouletteWithSize(todo.diff);
+
+        // Mecânica do Equipamento: Graxeira Eficiente (e_graxeira_eficiente)
+        if (temEquipamento('e_graxeira_eficiente')) {
+          const pool = getRewardPool(todo.diff);
+          state.storedRoulettes = state.storedRoulettes || [];
+          state.storedRoulettes.push({ rewards: pool, size: todo.diff, storedAt: Date.now() });
+          updateRoletaButton();
+          showToast('Graxeira Eficiente: Roleta interceptada e guardada no estoque!', 'success');
+        } else {
+          openRouletteWithSize(todo.diff);
+        }
       }
       saveState();
       renderTodos();
@@ -388,9 +608,7 @@ function renderTodos() {
       autoSizeTextarea(inp);
       saveState();
     };
-    // ensure left alignment and initialize autosize immediately (avoid flicker)
     try { inp.style.textAlign = 'left'; autoSizeTextarea(inp); } catch(e) {}
-    // also defer one tick to catch layout changes
     setTimeout(() => autoSizeTextarea(inp), 0);
 
     diff.onclick = () => {
@@ -449,7 +667,6 @@ function createNewRow() {
     <button class="badge-btn btn-add-sub" style="opacity:0.2;cursor:default">+ SUB</button>
     <button class="todo-del" style="opacity:0;pointer-events:none">✕</button>`;
   
-  // Volta a disparar assim que qualquer coisa for digitada (ao vivo)
   const newInp = div.querySelector('.todo-name');
   newInp.oninput = function() {
     autoSizeTextarea(this);
@@ -465,10 +682,7 @@ function createNewRow() {
 }
 
 function addTodoFromInput(input) {
-  // Cancela se for só espaço em branco
   if (!input.value.trim()) return;
-  
-  // Salva exatamente o que foi digitado sem remover os espaços finais para não bugar o texto
   state.todos.push({ 
     id: generateId(), 
     name: input.value, 
@@ -477,17 +691,14 @@ function addTodoFromInput(input) {
     children: [], 
     expanded: true 
   });
-  
   saveState();
   renderTodos();
   
-  // Procura o item que acabou de ser criado e foca nele
   const rows = document.querySelectorAll('#todo-list > .todo-node');
   if (rows.length) {
     const lastInp = rows[rows.length - 1].querySelector('.todo-name');
     if (lastInp) {
       lastInp.focus();
-      // O SEGREDO: Coloca o cursor piscando obrigatoriamente no final do texto!
       const len = lastInp.value.length;
       lastInp.setSelectionRange(len, len);
     }
@@ -521,6 +732,12 @@ function togglePomodoro() {
   if (state.pomodoroRunning) {
     clearInterval(pomodoroInterval); state.pomodoroRunning = false;
     document.getElementById('btn-start').textContent = '▶ Retomar';
+    
+    // Mecânica do Consumível: Café Frio de Ontem (c_cafe)
+    if (state.tempModifiers && state.tempModifiers.cafeSemPausa) {
+      state.tempModifiers.cafeSemPausa = false;
+      showToast('Café Frio de Ontem: Você pausou! O bônus de ciclo foi perdido.', 'error');
+    }
   } else {
     state.pomodoroRunning = true;
     document.getElementById('btn-start').textContent = '⏸ Pausar';
@@ -530,13 +747,19 @@ function togglePomodoro() {
 }
 
 function tickPomodoro() {
+  // Mecânica do Consumível: Fita Isolante (c_fita)
+  if (state.tempModifiers && state.tempModifiers.fitaBloqueioTimer) {
+    state.tempModifiers.fitaBloqueioTimer = false; // Bloqueia redução por 1 segundo
+    updatePomodoroDisplay();
+    return;
+  }
+
   state.pomodoroSecondsLeft--;
   if (state.pomodoroSecondsLeft <= 0) {
     clearInterval(pomodoroInterval); state.pomodoroRunning = false;
     playTimerFim();
     handlePhaseEnd(); return;
   }
-  // play countdown at 10 seconds once
   if (state.pomodoroSecondsLeft === 10 && !countdownPlayed) { playCountdown(); countdownPlayed = true; }
   updatePomodoroDisplay();
 }
@@ -547,10 +770,35 @@ function handlePhaseEnd() {
     const isLong = state.pomodoroSessions % 4 === 0;
     pendingRewardSize = isLong ? 'grande' : 'pequeno';
     state.pomodoroPhase = isLong ? 'longa' : 'curta';
-    // premiar moedas: tempo da tarefa + metade (arredondado pra cima) do tempo da recompensa
+    
     const taskMinutes = state.config.foco || 0;
     const rewardMinutes = isLong ? (state.config.longa || 0) : (state.config.curta || 0);
-    const award = taskMinutes + Math.ceil((rewardMinutes) / 2);
+    let award = taskMinutes + Math.ceil((rewardMinutes) / 2);
+
+    // Mecânica do Consumível: Café Frio de Ontem (c_cafe) no fim do foco
+    if (state.tempModifiers && state.tempModifiers.cafeSemPausa) {
+      award *= 2;
+      state.tempModifiers.cafeSemPausa = false;
+      showToast('Café Frio de Ontem: Foco sem pausas! Ciclo DOBRADO!', 'success');
+    }
+
+    // Mecânica do Equipamento: Caldeira de Alta Pressão (e_caldeira_pressao)
+    if (temEquipamento('e_caldeira_pressao')) {
+      const bonusCaldeira = state.pomodoroSessions * 2;
+      award += bonusCaldeira;
+      showToast(`Caldeira de Alta Pressão: +${bonusCaldeira} moedas pelo histórico!`, 'success');
+    }
+
+    // Mecânica do Equipamento: Caixa de Engrenagens de Juros (e_caixa_multiplicadora)
+    if (temEquipamento('e_caixa_multiplicadora')) {
+      const numStored = (state.storedRoulettes && state.storedRoulettes.length) || 0;
+      const bonusCaixa = numStored * 3;
+      award += bonusCaixa;
+      if (bonusCaixa > 0) {
+        showToast(`Caixa de Engrenagens: +${bonusCaixa} moedas de juros por acumular roletas!`, 'success');
+      }
+    }
+
     awardCoins(award, 'pomodoro_end');
     showComplete(state.pomodoroPhase);
   } else {
@@ -568,14 +816,14 @@ function skipPomodoro() {
   clearInterval(pomodoroInterval);
   state.pomodoroRunning = false;
   handlePhaseEnd();
- playTimerFim();
+  playTimerFim();
 }
 
 function resetPomodoro() {
   playSfx('botaoBase');
   clearInterval(pomodoroInterval); state.pomodoroRunning = false;
   state.pomodoroPhase = 'foco'; state.pomodoroSecondsLeft = state.config.foco * 60;
-  state.pomodoroSessions = 0; // Retorna para a primeira sessão
+  state.pomodoroSessions = 0; 
   document.getElementById('btn-start').textContent = '▶ Iniciar';
   countdownPlayed = false;
   updatePomodoroDisplay(); saveState();
@@ -587,8 +835,6 @@ function updatePomodoroDisplay() {
   document.getElementById('pomo-display').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   const phases = { foco: 'FOCO', curta: 'PAUSA CURTA', longa: 'PAUSA LONGA' };
   document.getElementById('pomo-phase').textContent = phases[state.pomodoroPhase];
-  
-  // Exibição atualizada dinamicamente do número da sessão
   document.getElementById('pomo-session').textContent = `SESSÃO ${state.pomodoroSessions + 1}`;
   
   const total = getPhaseDuration();
@@ -643,7 +889,7 @@ let rouletteRewards = [];
 let wheelAngle = 0;
 let wheelSpinning = false;
 let lastSpinIndex = null;
-let currentOpenRoulette = null; // { rewards, size, fromStoredIndex }
+let currentOpenRoulette = null; 
 
 function openRouletteWithSize(size) {
   rouletteRewards = getRewardPool(size);
@@ -653,9 +899,7 @@ function openRouletteWithSize(size) {
   document.getElementById('roulette-result').textContent = 'Gire a roleta...';
   document.getElementById('btn-spin').disabled = false;
   document.getElementById('btn-spin').textContent = '▶ Girar';
-  // mark current open roulette (not from stored)
   currentOpenRoulette = { rewards: rouletteRewards.slice(), size: size, fromStoredIndex: null };
-  // show 'Guardar' option before spinning
   try { const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '💾 Guardar'; closeBtn.dataset.store = '1'; } } catch(e){}
   document.getElementById('roulette-overlay').classList.add('open');
   drawWheel(wheelAngle);
@@ -673,7 +917,6 @@ function closeRoulette() {
 function closeOrStoreRoulette() {
   const closeBtn = document.getElementById('btn-close');
   if (closeBtn && closeBtn.dataset && closeBtn.dataset.store === '1') {
-    // store the currently open roulette (only if not from stored)
     storeCurrentRoulette();
   } else {
     closeRoulette();
@@ -681,7 +924,6 @@ function closeOrStoreRoulette() {
 }
 
 function storeCurrentRoulette() {
-  // only store if we have a current open roulette pool
   if (!currentOpenRoulette || !Array.isArray(currentOpenRoulette.rewards) || currentOpenRoulette.rewards.length === 0) {
     closeRoulette();
     return;
@@ -691,9 +933,7 @@ function storeCurrentRoulette() {
     state.storedRoulettes.push({ rewards: currentOpenRoulette.rewards.slice(), size: currentOpenRoulette.size, storedAt: Date.now() });
     saveState();
     updateRoletaButton();
-    // reset close button
     const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; }
-    // close overlay and clear currentOpenRoulette
     currentOpenRoulette = null;
     closeRoulette();
   } catch(e) { closeRoulette(); }
@@ -710,20 +950,17 @@ function onStoredRoletaClick() {
   const btn = document.getElementById('btn-roleta-storage');
   const n = (state.storedRoulettes && state.storedRoulettes.length) || 0;
   if (!n) { playSfx('botaoBase'); return; }
-  // peek last stored (do not remove yet) and open overlay so user can choose to spin or cancel
   const idx = state.storedRoulettes.length - 1;
   const obj = state.storedRoulettes[idx];
   try {
     rouletteRewards = obj.rewards.slice();
     wheelAngle = 0;
     lastSpinIndex = null;
-    // mark current open roulette as from stored (so spin will consume it)
     currentOpenRoulette = { rewards: rouletteRewards.slice(), size: obj.size, fromStoredIndex: idx };
     document.getElementById('roulette-title').textContent = '🎡 Roleta Guardada';
     document.getElementById('roulette-result').textContent = 'Gire a roleta...';
     document.getElementById('btn-spin').disabled = false;
     document.getElementById('btn-spin').textContent = '▶ Girar';
-    // stored roleta cannot be 'guardada' again — close button acts as normal
     const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; }
     document.getElementById('roulette-overlay').classList.add('open');
     drawWheel(wheelAngle);
@@ -752,7 +989,7 @@ function drawWheel(angle) {
   }
   ctx.beginPath(); ctx.arc(cx, cy, 18, 0, 2*Math.PI); ctx.fillStyle = '#0d0b08'; ctx.fill();
   ctx.strokeStyle = '#b8962e'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); strokeStyle = '#b8962e'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.strokeStyle = '#b8962e'; ctx.lineWidth = 2; ctx.stroke();
 }
 
 function spinWheel() {
@@ -762,18 +999,15 @@ function spinWheel() {
   document.getElementById('btn-spin').disabled = true;
   document.getElementById('roulette-result').textContent = '...';
 
-  // If this spin is for a stored roulette, consume it now (only once)
   if (currentOpenRoulette && typeof currentOpenRoulette.fromStoredIndex === 'number') {
     const idx = currentOpenRoulette.fromStoredIndex;
     if (state.storedRoulettes && state.storedRoulettes[idx]) {
       state.storedRoulettes.splice(idx, 1);
       saveState();
       updateRoletaButton();
-      // avoid double-consuming
       currentOpenRoulette.fromStoredIndex = null;
     }
   }
-  // once spin starts, cannot store this roulette anymore
   try { const closeBtn = document.getElementById('btn-close'); if (closeBtn) { delete closeBtn.dataset.store; closeBtn.textContent = '✕ Fechar'; } } catch(e){}
 
   const n = rouletteRewards.length;
@@ -784,7 +1018,7 @@ function spinWheel() {
   const extraSpins = 6 + Math.floor(Math.random() * 4);
   const finalAngle = targetBase + extraSpins * 2 * Math.PI;
 
-  const duration = 5000; // Alterado de 4000 para exatamente 5000ms (5 segundos)
+  const duration = 5000; 
   const startTime = performance.now();
   const startAngle = wheelAngle;
   const delta = finalAngle - startAngle;
@@ -803,12 +1037,7 @@ function spinWheel() {
     document.getElementById('btn-spin').textContent = '↺ Girar de Novo';
     document.getElementById('roulette-result').textContent = '🎲 ' + rouletteRewards[targetIndex];
     lastSpinIndex = targetIndex;
-    // after spinning, do not offer 'Guardar' (per design). ensure close button is normal
-    try {
-      const closeBtn = document.getElementById('btn-close');
-      if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; }
-    } catch(e){}
-    // clear temporary open roulette (can't be stored now)
+    try { const closeBtn = document.getElementById('btn-close'); if (closeBtn) { closeBtn.textContent = '✕ Fechar'; delete closeBtn.dataset.store; } } catch(e){}
     currentOpenRoulette = null;
   }
   requestAnimationFrame(animate);
@@ -864,14 +1093,13 @@ function renderConfig() {
     }
   });
   syncModeButtons();
-  // Pomodoro auto-advance switch (if present)
+  
   const autoEl = document.getElementById('auto-advance');
   if (autoEl) {
     if (autoEl.tagName === 'INPUT') {
       autoEl.checked = !!state.autoAdvance;
       autoEl.onchange = function() { state.autoAdvance = !!this.checked; playSfx('checkbox'); saveState(); };
     } else {
-      // styled button toggle (uses .todo-check styles)
       autoEl.classList.toggle('checked', !!state.autoAdvance);
       autoEl.textContent = state.autoAdvance ? '✓' : '';
       autoEl.setAttribute('aria-pressed', state.autoAdvance ? 'true' : 'false');
@@ -885,7 +1113,6 @@ function renderConfig() {
       };
     }
   }
-  // Compact UI toggle
   const compactEl = document.getElementById('cfg-compact-ui');
   if (compactEl) {
     compactEl.checked = !!state.compactUI;
@@ -919,10 +1146,9 @@ renderConfig();
 updatePomodoroDisplay();
 updateCoinDisplay();
 updateRoletaButton();
-// wire roleta stored button
-try { const rb = document.getElementById('btn-roleta-storage'); if (rb) rb.onclick = onStoredRoletaClick; } catch(e) {}
+try { const rb = document.getElementById('btn-roleta-storage'); if (rb) rb.onclick = onStoredRoletaClick; } catch(e){}
 
-// Expose state and common APIs to other modules (shop.js expects these)
+// Exportar APIs para o ecossistema global (shop.js e interações)
 try {
   window.state = state;
   window.saveState = saveState;
@@ -930,11 +1156,8 @@ try {
   window.awardCoins = awardCoins;
 } catch(e) {}
 
-// Register service worker for PWA (GitHub Pages)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').then(() => {
-      // console.log('Service Worker registered');
-    }).catch(() => {});
+    navigator.serviceWorker.register('./service-worker.js').then(() => {}).catch(() => {});
   });
 }

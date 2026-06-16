@@ -13,20 +13,20 @@ document.addEventListener('click', function(ev){
 });
 (function(){
   // simple shop/inventory module
-  const SHOP = {
-    consumables: [
-      { id: 'c_1', name: 'Potion', price: 3, img: 'media/placeholder-64.png', desc: 'Recupera algo.' },
-      { id: 'c_2', name: 'Elixir', price: 5, img: 'media/placeholder-64.png', desc: 'Recupera mais.' },
-      { id: 'c_3', name: 'Biscoito', price: 1, img: 'media/placeholder-64.png', desc: 'Um snack.' }
-    ],
-    equipments: [
-      { id: 'e_1', name: 'Espada', price: 12, img: 'media/placeholder-64.png', desc: 'Uma espada robusta.', bought: false },
-      { id: 'e_2', name: 'Escudo', price: 10, img: 'media/placeholder-64.png', desc: 'Protege bem.', bought: false },
-      { id: 'e_3', name: 'Elmo', price: 8, img: 'media/placeholder-64.png', desc: 'Protege a cabeça.', bought: false },
-      { id: 'e_4', name: 'Botas', price: 7, img: 'media/placeholder-64.png', desc: 'Aumenta velocidade.', bought: false },
-      { id: 'e_5', name: 'Luvas', price: 6, img: 'media/placeholder-64.png', desc: 'Melhora precisão.', bought: false }
-    ]
-  };
+  // simple shop/inventory module - Puxando dinamicamente do itens.js
+  const SHOP = new Proxy({}, {
+    get: (target, prop) => {
+      // Se o itens.js ainda não tiver carregado ou a propriedade não existir, retorna um array vazio
+      if (!window.ITENS_DB || !window.ITENS_DB[prop]) return [];
+      
+      // Força a imagem de cada item a seguir o seu padrão 'media/id.png' automaticamente
+      window.ITENS_DB[prop].forEach(item => {
+        item.img = `media/${item.id}.png`;
+      });
+      
+      return window.ITENS_DB[prop];
+    }
+  });
 
   // Toast helper
   function ensureToastContainer() {

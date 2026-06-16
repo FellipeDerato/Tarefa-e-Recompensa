@@ -93,7 +93,7 @@ const ITENS_DB = {
       name: 'Caldeira de Alta Pressão',
       price: 55,
       img: 'media/placeholder-64.png',
-      desc: 'Garante fundos extras ao terminar ciclos de foco, injetando moedas adicionais baseadas na quantidade de sessões que você já concluiu.'
+      desc: 'Garante fundos extras ao terminar ciclos de foco, injetando moedas adicionais baseadas na quantidade de sessões que você já concluuiu.'
     },
     {
       id: 'e_alternador_gasto',
@@ -137,18 +137,17 @@ function usarConsumivel(id, todoId = null) {
 
   switch (id) {
     case 'c_ficha':
-      // Dispara a roleta de recompensas imediatamente
       if (typeof window.openRoulette === 'function') {
-        window.openRoulette('good'); // Abre no modo padrão/bom
-        showToast('Ficha utilizada! Roleta liberada.', 'success');
+        window.openRoulette('good');
+        if (typeof window.showToast === 'function') window.showToast('Ficha utilizada! Roleta liberada.', 'success');
         return true;
       }
-      showToast('Erro ao acionar a roleta.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Erro ao acionar a roleta.', 'error');
       return false;
 
     case 'c_glicose':
       st.tempModifiers.glicoseAtiva = true;
-      showToast('Glicose aplicada! Próxima tarefa GRANDE dará o dobro de moedas.', 'success');
+      if (typeof window.showToast === 'function') window.showToast('Glicose aplicada! Próxima tarefa GRANDE dará o dobro de moedas.', 'success');
       return true;
 
     case 'c_triagem_sucata':
@@ -156,19 +155,18 @@ function usarConsumivel(id, todoId = null) {
         st.todos.sort((a, b) => {
           const aGrand = a.diff === 'grande' ? 1 : 0;
           const bGrand = b.diff === 'grande' ? 1 : 0;
-          return bGrand - aGrand; // Grandes no topo
+          return bGrand - aGrand;
         });
         if (typeof window.renderTodos === 'function') window.renderTodos();
         if (typeof window.saveState === 'function') window.saveState();
-        showToast('Lista reordenada! Tarefas grandes no topo.', 'success');
+        if (typeof window.showToast === 'function') window.showToast('Lista reordenada! Tarefas grandes no topo.', 'success');
         return true;
       }
-      showToast('Nenhuma tarefa para ordenar.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Nenhuma tarefa para ordenar.', 'error');
       return false;
 
     case 'c_oleo_brilhante':
       if (!todoId && st.todos && st.todos.length > 0) {
-        // Se não passou ID, aplica na primeira tarefa pendente encontrada como fallback
         const t = st.todos.find(x => !x.checked);
         if (t) todoId = t.id;
       }
@@ -178,11 +176,11 @@ function usarConsumivel(id, todoId = null) {
           todo.glow = true;
           if (typeof window.renderTodos === 'function') window.renderTodos();
           if (typeof window.saveState === 'function') window.saveState();
-          showToast(`Óleo aplicado na tarefa: "${todo.text.substring(0,15)}..."`, 'success');
+          if (typeof window.showToast === 'function') window.showToast(`Óleo aplicado na tarefa: "${todo.text.substring(0,15)}..."`, 'success');
           return true;
         }
       }
-      showToast('Selecione ou crie uma tarefa válida para aplicar.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Selecione ou crie uma tarefa válida para aplicar.', 'error');
       return false;
 
     case 'c_relogio_vapor':
@@ -193,88 +191,88 @@ function usarConsumivel(id, todoId = null) {
       if (todoId) {
         const todo = st.todos.find(x => x.id === todoId);
         if (todo) {
-          todo.deadline = Date.now() + (15 * 60 * 1000); // 15 minutos a partir de agora
+          todo.deadline = Date.now() + (15 * 60 * 1000);
           if (typeof window.renderTodos === 'function') window.renderTodos();
           if (typeof window.saveState === 'function') window.saveState();
-          showToast('Cronômetro ativado! Você tem 15 minutos para terminar esta tarefa.', 'warning');
+          if (typeof window.showToast === 'function') window.showToast('Cronômetro ativado! Você tem 15 minutos para terminar esta tarefa.', 'warning');
           return true;
         }
       }
-      showToast('Nenhuma tarefa disponível para aplicar o prazo.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Nenhuma tarefa disponível para aplicar o prazo.', 'error');
       return false;
 
     case 'c_adrenalina':
       if (st.pomodoroRunning && st.pomodoroPhase === 'foco') {
         st.pomodoroSecondsLeft += 300;
         if (typeof window.updatePomodoroDisplay === 'function') window.updatePomodoroDisplay();
-        showToast('+5 minutos adicionados ao timer de Foco!', 'success');
+        if (typeof window.showToast === 'function') window.showToast('+5 minutos adicionados ao timer de Foco!', 'success');
         return true;
       }
-      showToast('Você só pode injetar adrenalina durante uma sessão de Foco ativa.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Você só pode injetar adrenalina durante uma sessão de Foco ativa.', 'error');
       return false;
 
     case 'c_gilete':
       if (st.pomodoroRunning && st.pomodoroPhase === 'foco') {
         st.pomodoroSecondsLeft = Math.max(0, st.pomodoroSecondsLeft - 300);
-        st.tempModifiers.giletePenalidade = true; // Cortará ganhos do ciclo atual por 0.5
+        st.tempModifiers.giletePenalidade = true;
         if (typeof window.updatePomodoroDisplay === 'function') window.updatePomodoroDisplay();
-        showToast('Timer cortado em 5 minutos! (Recompensa final reduzida à metade).', 'warning');
+        if (typeof window.showToast === 'function') window.showToast('Timer cortado em 5 minutos! (Recompensa reduzida pela metade).', 'warning');
         return true;
       }
-      showToast('O timer precisa estar rodando em Foco.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('O timer precisa estar rodando em Foco.', 'error');
       return false;
 
     case 'c_cafe':
-      st.tempModifiers.cafeSemPausa = true; // Reseta validador
-      showToast('Café tomado! Se concluir o foco sem pausar, ganhará o dobro.', 'success');
+      st.tempModifiers.cafeSemPausa = true;
+      if (typeof window.showToast === 'function') window.showToast('Café tomado! Se concluir o foco sem pausar, ganhará o dobro.', 'success');
       return true;
 
     case 'c_fita':
       if (st.pomodoroRunning) {
         st.tempModifiers.fitaBloqueioTimer = true;
-        showToast('Timer congelado por até 3 minutos! Resolva seu imprevisto.', 'warning');
+        if (typeof window.showToast === 'function') window.showToast('Timer congelado por até 3 minutos!', 'warning');
         
         if (st.tempModifiers.fitaTimeoutId) clearTimeout(st.tempModifiers.fitaTimeoutId);
         st.tempModifiers.fitaTimeoutId = setTimeout(() => {
           if (st.tempModifiers.fitaBloqueioTimer) {
             st.tempModifiers.fitaBloqueioTimer = false;
-            showToast('O tempo da fita isolante acabou. Timer retomado!', 'info');
+            if (typeof window.showToast === 'function') window.showToast('O tempo da fita isolante acabou. Timer retomado!', 'info');
           }
         }, 3 * 60 * 1000);
         return true;
       }
-      showToast('O cronômetro não está rodando.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('O cronômetro não está rodando.', 'error');
       return false;
 
     case 'c_fio_cobre':
       if (st.pomodoroRunning && st.pomodoroPhase === 'foco') {
-        st.pomodoroSecondsLeft = Math.max(0, st.pomodoroSecondsLeft - 180); // Reduz 3 minutos (180s)
+        st.pomodoroSecondsLeft = Math.max(0, st.pomodoroSecondsLeft - 180);
         if (typeof window.updatePomodoroDisplay === 'function') window.updatePomodoroDisplay();
-        showToast('Choque de urgência! Avançou 3 minutos sem penalidades.', 'success');
+        if (typeof window.showToast === 'function') window.showToast('Choque de urgência! Avançou 3 minutos sem penalidades.', 'success');
         return true;
       }
-      showToast('Só aplicável durante o Foco ativo.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Só aplicável durante o Foco ativo.', 'error');
       return false;
 
     case 'c_bateria':
       st.tempModifiers.bateriaBonus = true;
-      showToast('Bateria conectada! Próximo Pomodoro finalizado renderá +50% de bônus.', 'success');
+      if (typeof window.showToast === 'function') window.showToast('Bateria conectada! Próximo Pomodoro renderá +50% de bônus.', 'success');
       return true;
 
     default:
-      showToast('Item não implementado ou desconhecido.', 'error');
+      if (typeof window.showToast === 'function') window.showToast('Item não implementado ou desconhecido.', 'error');
       return false;
   }
 }
 
-// Verifica se um equipamento específico está comprado e equipado no slot ativo
+// Verifica de forma segura se um equipamento está ativo
 function temEquipamento(id) {
   const st = window.state;
-  if (!st || !st.inventory) return false;
+  if (!st || !st.inventory || !Array.isArray(st.inventory)) return false;
   return st.inventory.some(item => item.id === id && item.equipped === true);
 }
 
-// Expõe para o escopo global do app
+// Expõe para o escopo global do app de forma limpa
 window.ITENS_DB = ITENS_DB;
 window.usarConsumivel = usarConsumivel;
 window.temEquipamento = temEquipamento;
