@@ -1,12 +1,15 @@
-const CACHE_NAME = 'tarefa-recompensa-v1';
+const CACHE_NAME = 'tarefa-recompensa-v2'; // Mudei para v2 para forçar o celular a atualizar
 const ASSETS = [
   './index.html',
   './tarefas_recompensa.html',
   './app.js',
   './style.css',
   './manifest.json',
-  './media/icon-192.svg',
-  './media/icon-512.svg'
+  './android-chrome-192x192.png',
+  './android-chrome-512x512.png',
+  './apple-touch-icon.png',
+  './favicon-32x32.png',
+  './favicon-16x16.png'
 ];
 
 self.addEventListener('install', (e) => {

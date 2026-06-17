@@ -170,7 +170,8 @@ document.addEventListener('pointerdown', initAudioOnGesture);
 
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-    if (e.key.length === 1 || e.key === 'Backspace') {
+    // Adicionamos e.keyCode === 229 e 'Unidentified' para capturar o teclado do celular
+    if (e.key.length === 1 || e.key === 'Backspace' || e.keyCode === 229 || e.key === 'Unidentified') {
       playTecla();
     }
   }
