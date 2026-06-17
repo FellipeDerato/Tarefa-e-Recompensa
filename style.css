@@ -199,3 +199,18 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* IMPORT/EXPORT HEADER */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 5px;
+}
+.section-header .section-label {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}

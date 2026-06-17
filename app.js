@@ -810,3 +810,119 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
   });
 }
+
+// ═══════════════════════════════════════════════════════
+// IMPORTAÇÃO E EXPORTAÇÃO
+// ═══════════════════════════════════════════════════════
+
+function openImportExport() {
+  playSfx('botaoBase');
+  const overlay = document.getElementById('ie-overlay');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function closeImportExport() {
+  playSfx('botaoBase');
+  const overlay = document.getElementById('ie-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function exportTasks() {
+  playSfx('tecla1');
+  
+  const dataStr = JSON.stringify(state.todos, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "tarefas_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  closeImportExport();
+}
+
+async function shareTasks() {
+  playSfx('tecla1');
+
+  // Prepara o arquivo e o texto
+  const dataStr = JSON.stringify(state.todos, null, 2);
+  const file = new File([dataStr], "tarefas.json", { type: "application/json" });
+  
+  const shareData = {
+    title: 'Tarefa & Recompensa',
+    text: '✨ Lista de afazeres!\n\nAbra e importe ela no site:\n👉 https://fellipederato.github.io/Tarefa-e-Recompensa/',
+    files: [file]
+  };
+
+  // Verifica se o dispositivo suporta a API de compartilhamento com arquivos
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share(shareData);
+      closeImportExport();
+    } catch (err) {
+      console.log('Compartilhamento cancelado ou falhou.', err);
+    }
+  } 
+  // Plano B: Se não suportar enviar o arquivo, tenta enviar só o texto com o link
+  else if (navigator.share) {
+    try {
+      await navigator.share({
+        title: shareData.title,
+        text: shareData.text + '\n\n(Seu dispositivo não suportou enviar o arquivo direto. Peça o arquivo JSON baixado.)'
+      });
+      closeImportExport();
+    } catch (err) {
+      console.log('Compartilhamento de texto cancelado.', err);
+    }
+  } 
+  // Plano C: Sem suporte nenhum (PCs muito antigos)
+  else {
+    alert('A função nativa de compartilhar não é suportada no seu navegador atual. Por favor, use o botão "Baixar" e envie o arquivo manualmente.');
+  }
+}
+
+function importTasks(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedTodos = JSON.parse(e.target.result);
+      
+      if (Array.isArray(importedTodos)) {
+        state.todos = importedTodos;
+        saveState();
+        renderTodos();
+        playSfx('checkbox');
+        alert("Tarefas importadas com sucesso!");
+      } else {
+        alert("Erro: O arquivo não contém uma lista de tarefas válida.");
+      }
+    } catch (err) {
+      alert("Erro ao ler o arquivo JSON. Ele pode estar corrompido.");
+    }
+    closeImportExport();
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// Fechar com a tecla ESC
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const ieOverlay = document.getElementById('ie-overlay');
+    if (ieOverlay && ieOverlay.style.display === 'flex') {
+      closeImportExport();
+    }
+    
+    const rouletteOverlay = document.getElementById('roulette-overlay');
+    if (rouletteOverlay && rouletteOverlay.classList.contains('open')) {
+      closeRoulette();
+    }
+  }
+});

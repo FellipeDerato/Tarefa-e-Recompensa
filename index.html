@@ -34,7 +34,10 @@
 <main class="main">
 
   <div class="tab-content active" id="tab-afazeres">
-    <div class="section-label">Lista de afazeres</div>
+    <div class="section-header">
+      <div class="section-label">Lista de afazeres</div>
+      <button class="btn-grunge" style="padding: 4px 10px; font-size: 12px;" onclick="openImportExport()">💾 Dados</button>
+    </div>
     <div class="todo-list" id="todo-list"></div>
   </div>
 
@@ -167,6 +170,23 @@
   <div class="complete-sub" id="complete-sub">Hora de colher sua recompensa</div>
   <button class="btn-grunge primary" onclick="onCompleteRoulette()">🎲 Girar Roleta</button>
   <button class="btn-grunge" onclick="closeComplete()">Ignorar</button>
+</div>
+
+<div class="roulette-overlay" id="ie-overlay" style="display: none;">
+  <div class="roulette-box" style="text-align: center;">
+    <div class="roulette-title">💾 Dados da Lista</div>
+    <p style="color: var(--text2); margin-bottom: 20px; font-size: 14px;">Salve, carregue ou envie sua lista.</p>
+    
+    <div class="roulette-btns" style="flex-direction: column; gap: 12px;">
+      <button class="btn-grunge " onclick="shareTasks()">🔗 Compartilhar</button>
+      <button class="btn-grunge " onclick="exportTasks()">📤 Baixar</button>
+      <button class="btn-grunge" onclick="document.getElementById('import-file').click()">📥 Importar</button>
+      <button class="btn-grunge" onclick="closeImportExport()" style="margin-top: 10px;">✕ Fechar</button>
+    </div>
+    
+    <!-- Input invisível para lidar com a seleção do arquivo -->
+    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importTasks(event)">
+  </div>
 </div>
 
 <script src="app.js" defer ></script>
