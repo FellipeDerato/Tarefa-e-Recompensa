@@ -848,40 +848,45 @@ function exportTasks() {
 async function shareTasks() {
   playSfx('tecla1');
 
-  // Prepara o arquivo e o texto
+  // Se o navegador não suportar compartilhamento nativo nenhum (Brave/LibreWolf no PC)
+  if (!navigator.share) {
+    alert('A função de compartilhar não é suportada neste navegador. Use o botão "Baixar".');
+    return;
+  }
+
   const dataStr = JSON.stringify(state.todos, null, 2);
   const file = new File([dataStr], "tarefas.json", { type: "application/json" });
   
-  const shareData = {
-    title: 'Tarefa & Recompensa',
-    text: '✨ Lista de afazeres!\n\nAbra e importe ela no site:\n👉 https://fellipederato.github.io/Tarefa-e-Recompensa/',
-    files: [file]
-  };
+  const textMessage = '✨ Lista de afazeres!\n\nAbra e importe ela no site:\n👉 https://fellipederato.github.io/Tarefa-e-Recompensa/';
 
-  // Verifica se o dispositivo suporta a API de compartilhamento com arquivos
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share(shareData);
-      closeImportExport();
-    } catch (err) {
-      console.log('Compartilhamento cancelado ou falhou.', err);
+  try {
+    // TENTATIVA 1: Compartilhar com o arquivo
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: 'Tarefa & Recompensa',
+        text: textMessage,
+        files: [file]
+      });
+    } else {
+      // Se canShare disser que não pode, forçamos o erro para cair na TENTATIVA 2
+      throw new Error('Arquivos não suportados');
     }
-  } 
-  // Plano B: Se não suportar enviar o arquivo, tenta enviar só o texto com o link
-  else if (navigator.share) {
+    closeImportExport();
+    
+  } catch (err) {
+    // Se o erro for 'AbortError', o usuário apenas clicou fora para fechar a aba de compartilhar. Não fazemos nada.
+    if (err.name === 'AbortError') return;
+
+    // TENTATIVA 2: O Android bloqueou o arquivo .json, então mandamos só o texto
     try {
       await navigator.share({
-        title: shareData.title,
-        text: shareData.text + '\n\n(Seu dispositivo não suportou enviar o arquivo direto. Peça o arquivo JSON baixado.)'
+        title: 'Tarefa & Recompensa',
+        text: textMessage + '\n\n(Dica: Baixe o arquivo de backup direto no site!)'
       });
       closeImportExport();
-    } catch (err) {
-      console.log('Compartilhamento de texto cancelado.', err);
+    } catch (err2) {
+      console.log('Compartilhamento final cancelado ou falhou.', err2);
     }
-  } 
-  // Plano C: Sem suporte nenhum (PCs muito antigos)
-  else {
-    alert('A função nativa de compartilhar não é suportada no seu navegador atual. Por favor, use o botão "Baixar" e envie o arquivo manualmente.');
   }
 }
 
