@@ -208,9 +208,138 @@
   margin-bottom: 15px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 5px;
+  flex-wrap: nowrap; /* Impede de cair pra linha de baixo */
+  gap: 10px; /* Dá um espacinho se a tela for muito pequena */
 }
-.section-header .section-label {
-  margin-bottom: 0;
-  border-bottom: none;
-  padding-bottom: 0;
+
+/* Garante que o texto do botão não quebre */
+.section-header .btn-grunge {
+  white-space: nowrap; 
+  padding: 5px;
+  flex-shrink: 0;
+}
+
+
+/* CONTAINER DO EDITOR */
+.markdown-editor-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  height: calc(100vh - 220px);
+  min-height: 400px;
+}
+
+.editor-pane, .preview-pane-wrapper {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ÁREA DE TEXTO */
+#md-textarea {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  resize: none;
+  padding: 15px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+}
+
+/* VISUALIZAÇÃO EM TEMPO REAL */
+.preview-pane-wrapper {
+  overflow-y: auto;
+}
+
+.preview-pane {
+  padding: 15px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+//* ═══════════════════════════════════════════════════════
+   ESTILOS DO NOVO EDITOR VISUAL (WYSIWYG)
+   ═══════════════════════════════════════════════════════ */
+
+.editor-toolbar {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  text-align: center;
+  background: var(--bg3);
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.btn-toolbar {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 5px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.btn-toolbar:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(184, 150, 46, 0.1);
+}
+
+.btn-toolbar:active {
+  background: var(--border);
+}
+
+.wysiwyg-editor-container {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: calc(100vh - 220px);
+  min-height: 420px;
+  overflow-y: auto;
+  margin-top: 12px;
+}
+
+#rich-editor {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  padding: 30px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+}
+
+/* Comportamento do Placeholder dinâmico para ContentEditable */
+#rich-editor:empty::before {
+  content: attr(placeholder);
+  color: var(--text3);
+  pointer-events: none;
+  display: block;
+}
+
+/* RESPONSIVIDADE PARA CELULAR */
+@media (max-width: 768px) {
+  .markdown-editor-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: calc(100vh - 200px);
+  }
 }

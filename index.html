@@ -30,6 +30,7 @@
 <nav class="nav-tabs">
   <button class="nav-tab active" onclick="switchTab('afazeres',this)">☰ Afazeres</button>
   <button class="nav-tab" onclick="switchTab('pomodoro',this)">⏱ Pomodoro</button>
+  <button class="nav-tab" onclick="switchTab('anotacoes',this)">♨ Anotações</button>
   <button class="nav-tab" onclick="switchTab('config',this)">⚙ Configurar</button>
 </nav>
 
@@ -38,9 +39,32 @@
   <div class="tab-content active" id="tab-afazeres">
     <div class="section-header">
       <div class="section-label">Lista de afazeres</div>
-      <button class="btn-grunge" style="padding: 4px 10px; font-size: 12px;" onclick="openImportExport()">💾 Dados</button>
     </div>
     <div class="todo-list" id="todo-list"></div>
+  </div>
+
+  <div class="tab-content" id="tab-anotacoes" >
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 8px;">
+    <h2 class="section-label">ANOTAÇÕES</h2>
+    
+    <div class="editor-toolbar">
+      <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'H1')" title="Título Maior">H1</button>
+      <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'H2')" title="Título Médio">H2</button>
+      <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'H3')" title="Subtítulo">H3</button>
+      <button class="btn-toolbar" onclick="insertTab()" title="Tabulação / Espaço grande">⇥ Tab</button>
+      <button class="btn-toolbar" onclick="formatDoc('bold')" title="Negrito" style="font-weight: bold;">B</button>
+      <button class="btn-toolbar" onclick="formatDoc('italic')" title="Itálico" style="font-style: italic;">I</button>
+      <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'BLOCKQUOTE')" title="Citação / Bloco">“</button>
+      <button class="btn-toolbar" onclick="formatDoc('insertUnorderedList')" title="Lista Simples">• Marcador</button>
+      <button class="btn-toolbar" onclick="formatDoc('insertOrderedList')" title="Lista Numerada">1. Lista</button>
+      <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'PRE')" title="Bloco de Código">&lt;/&gt;</button>
+      <button class="btn-toolbar" onclick="insertLink()" title="Inserir Link">🔗</button>
+    </div>
+  </div>
+  
+  <div class="wysiwyg-editor-container">
+    <div id="rich-editor" contenteditable="true" class="markdown-body" oninput="saveEditorContent()" placeholder="Comece a escrever suas notas aqui... Selecione uma palavra para aplicar estilos ou use os botões acima como no Word."></div>
+  </div>
   </div>
 
   <div class="tab-content" id="tab-pomodoro">
@@ -68,6 +92,10 @@
   </div>
 
   <div class="tab-content" id="tab-config">
+<div class="section-header"  >
+    <h2 class="section-label">CONFIGURAÇÕES</h2>
+    <button class="btn-grunge" onclick="openImportExport()">♺ Dados</button>
+  </div>
     <div class="config-grid">
 
       <div class="config-card">
@@ -191,6 +219,7 @@
   </div>
 </div>
 
-<script src="app.js" defer ></script>
+<script src="anotations.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
