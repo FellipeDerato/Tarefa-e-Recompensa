@@ -109,16 +109,7 @@
     box-sizing: border-box;
   }
 
-  /* Compact / mobile-friendly defaults */
-  @media (max-width: 600px) {
-    .todo-item-main { grid-template-columns: 20px 28px 1fr auto auto auto; padding: 8px 10px; }
-    .todo-name { font-size: 13px; }
-    .todo-children { padding-left: 16px; gap: 4px; }
-    .main { padding: 12px 10px 40px; }
-    .app-title { font-size: clamp(20px,8vw,36px); }
-    .todo-toggle, .todo-check { margin: 0;}
-    .todo-item-main { gap: 4px;}
-  }
+  
 
   /* Compact mode class (toggleable) */
   .compact-ui .todo-item-main { grid-template-columns: 20px 28px 1fr auto auto auto; padding: 8px 10px; }
@@ -265,7 +256,7 @@
   line-height: 1.6;
 }
 
-//* ═══════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════
    ESTILOS DO NOVO EDITOR VISUAL (WYSIWYG)
    ═══════════════════════════════════════════════════════ */
 
@@ -286,7 +277,7 @@
   color: var(--text2);
   padding: 5px 12px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: bold;
   text-align: center;
   vertical-align: middle;
@@ -343,3 +334,96 @@
     height: calc(100vh - 200px);
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   ESTILOS DE CITAÇÃO E CÓDIGO NO EDITOR
+   ═══════════════════════════════════════════════════════ */
+
+/* Citações (Blockquote) */
+#rich-editor blockquote {
+  border-left: 4px solid var(--rust);
+  margin: 10px 0;
+  padding: 10px 15px;
+  color: var(--text2);
+  background: rgba(255, 255, 255, 0.03); /* Fundo sutil */
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+}
+
+/* Código Inline */
+#rich-editor code, #rich-editor .inline-code {
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.4); 
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--gold);
+  font-size: 0.9em;
+}
+
+/* Bloco de Código (Pre) */
+#rich-editor pre {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+#rich-editor pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--text);
+}
+
+
+
+
+
+
+
+
+
+/* Compact / mobile-friendly defaults */
+  @media (max-width: 600px) {
+    .todo-item-main { grid-template-columns: 20px 28px 1fr auto auto auto; padding: 8px 10px; }
+    .todo-name { font-size: 13px; }
+    .todo-children { padding-left: 16px; gap: 4px; }
+    .main { padding: 12px 10px 40px; }
+    .app-title { font-size: clamp(20px,8vw,36px); }
+    .todo-toggle, .todo-check { margin: 0;}
+    .todo-item-main { gap: 4px;}
+    .nav-tab {font-size: 12px; width: auto; }
+    .pomo-controls > * {
+      max-width: 25vw;
+      min-width: 80px;
+      text-align: center;
+      font-size: 10px;
+      padding: 10px;
+
+    }
+  }
+
+  @media (max-width: 400px){
+    .todo-item-main > *, .badge-diff .btn-add-sub, .todo-del, .todo-check{
+      font-size: 11px;
+    }
+    .todo-item-main {
+      gap: 3px;
+    }
+    .badge-diff{
+      padding: 2px;
+    }
+    .todo-check{
+      width: 15px;
+      height: 15px;
+      margin: 0;
+    }
+    .nav-tab{
+      width: 10px;
+      min-width: 0px;
+      font-size: 8px;
+    }
+  }

@@ -51,13 +51,13 @@
       <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'H1')" title="Título Maior">H1</button>
       <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'H2')" title="Título Médio">H2</button>
       <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'H3')" title="Subtítulo">H3</button>
-      <button class="btn-toolbar" onclick="insertTab()" title="Tabulação / Espaço grande">⇥ Tab</button>
+      <button class="btn-toolbar" onclick="insertTab()" title="Tabulação / Espaço grande">➤</button>
       <button class="btn-toolbar" onclick="formatDoc('bold')" title="Negrito" style="font-weight: bold;">B</button>
       <button class="btn-toolbar" onclick="formatDoc('italic')" title="Itálico" style="font-style: italic;">I</button>
       <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'BLOCKQUOTE')" title="Citação / Bloco">“</button>
-      <button class="btn-toolbar" onclick="formatDoc('insertUnorderedList')" title="Lista Simples">• Marcador</button>
-      <button class="btn-toolbar" onclick="formatDoc('insertOrderedList')" title="Lista Numerada">1. Lista</button>
-      <button class="btn-toolbar" onclick="formatDoc('formatBlock', 'PRE')" title="Bloco de Código">&lt;/&gt;</button>
+      <button class="btn-toolbar" onclick="formatDoc('insertUnorderedList')" title="Lista Simples">•</button>
+      <button class="btn-toolbar" onclick="formatDoc('insertOrderedList')" title="Lista Numerada">1.</button>
+      <button class="btn-toolbar" onclick="formatCode()" title="Código">&lt;/&gt;</button>
       <button class="btn-toolbar" onclick="insertLink()" title="Inserir Link">🔗</button>
     </div>
   </div>
@@ -81,7 +81,7 @@
       </div>
       <div class="pomo-controls">
         <button class="btn-grunge primary" id="btn-start" onclick="togglePomodoro()">▶ Iniciar</button>
-	<button class="btn-grunge" onclick="skipPomodoro()">⏭ Pular</button>
+	      <button class="btn-grunge" onclick="skipPomodoro()">⏭ Pular</button>
         <button class="btn-grunge danger" onclick="resetPomodoro()">↺ Resetar</button>
       </div>
       <div style="margin-top:10px; display:flex; gap:8px; align-items:center; justify-content:center;">

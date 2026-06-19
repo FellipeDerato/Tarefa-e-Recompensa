@@ -105,3 +105,33 @@ function insertTab() {
   document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;');
   saveEditorContent();
 }
+
+// Função exclusiva para formatar Código (Inline Code)
+function formatCode() {
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+  const selectedText = range.toString();
+
+  if (selectedText.length > 0) {
+    // Se tiver texto selecionado, envolve ele na tag de código
+    const codeNode = document.createElement('code');
+    codeNode.className = 'inline-code';
+    codeNode.textContent = selectedText;
+    
+    range.deleteContents();
+    range.insertNode(codeNode);
+    
+    // Move o cursor para o final
+    range.setStartAfter(codeNode);
+    range.setEndAfter(codeNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    // Se não tiver texto selecionado, insere um bloco vazio para digitar
+    document.execCommand('insertHTML', false, '<code class="inline-code">&#8203;</code>&nbsp;');
+  }
+  
+  saveEditorContent();
+}
