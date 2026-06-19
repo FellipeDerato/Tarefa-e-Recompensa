@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TAREFA & RECOMPENSA</title>
-<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
-<link href="style.css" rel="stylesheet"/>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d0b08">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  <link rel="apple-touch-icon" sizes="180x180" href="media/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="media/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="media/favicon-16x16.png">
-  
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="msapplication-navbutton-color" content="#0d0b08">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0b08">
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAREFA & RECOMPENSA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+  <link href="style.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d0b08">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="media/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="media/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="media/favicon-16x16.png">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-navbutton-color" content="#0d0b08">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0d0b08">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 </head>
 <body>
 
@@ -208,18 +209,31 @@
     <p style="color: var(--text2); margin-bottom: 20px; font-size: 14px;">Salve, carregue ou envie sua lista.</p>
     
     <div class="roulette-btns" style="flex-direction: column; gap: 12px;">
-      <button class="btn-grunge " onclick="shareTasks()">🔗 Compartilhar</button>
       <button class="btn-grunge " onclick="exportTasks()">📤 Baixar</button>
       <button class="btn-grunge" onclick="document.getElementById('import-file').click()">📥 Importar</button>
-      <button class="btn-grunge" onclick="closeImportExport()" style="margin-top: 10px;">✕ Fechar</button>
     </div>
-    
-    <!-- Input invisível para lidar com a seleção do arquivo -->
-    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importTasks(event)">
+
+    <div style="border-top: 1px solid var(--border); margin-top: 20px; padding-top: 15px; text-align: left;">
+      <div style="font-size: 11px; color: var(--gold); font-family: var(--font-display); margin-bottom: 10px; letter-spacing: 1px; text-align: center;">☁ SINCRONIZAÇÃO EM NUVEM</div>
+      
+      <button class="btn-grunge" onclick="generateShareCode()" style="width: 100%; margin-bottom: 12px;">☁ Gerar Código de Compartilhamento</button>
+      <div id="generated-code-container" style="display: none; background: rgba(0,0,0,0.4); border: 1px dashed var(--gold); padding: 10px; text-align: center; border-radius: 4px; margin-bottom: 15px;">
+        <span style="font-size: 11px; color: var(--text3); display: block; text-transform: uppercase;">Seu Código Gerado:</span>
+        <span id="share-code-value" style="font-size: 24px; font-weight: bold; color: var(--gold2); letter-spacing: 3px; font-family: var(--font-mono);">-----</span>
+      </div>
+      
+      <div style="display: flex; gap: 8px; margin-top: 5px;">
+        <input type="text" id="import-code-input" placeholder="CÓDIGO (EX: X7R2Q)" maxlength="5" style="flex: 1; background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); text-align: center; font-size: 14px; text-transform: uppercase; outline: none; border-radius: 4px;">
+        <button class="btn-grunge" onclick="importByCode()" style="padding: 5px 15px;">📥 Carregar</button>
+      </div>
+    </div>
+    <button class="btn-grunge" onclick="closeImportExport()" style="margin-top: 20px; width: 100%;">✕ Fechar</button>
+    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importTasks(event)">
   </div>
 </div>
 
-<script src="anotations.js"></script>
 <script src="app.js"></script>
+  <script src="anotations.js"></script>
+  <script src="data.js"></script>
 </body>
 </html>

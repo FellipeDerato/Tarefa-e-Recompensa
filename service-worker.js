@@ -1,8 +1,9 @@
-const CACHE_NAME = 'tarefa-recompensa-v2'; // Mudei para v2 para forçar o celular a atualizar
+const CACHE_NAME = 'tarefa-recompensa-v3'; 
 const ASSETS = [
   './index.html',
   './tarefas_recompensa.html',
   './app.js',
+  './data.js',
   './style.css',
   './manifest.json',
   './android-chrome-192x192.png',

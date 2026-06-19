@@ -66,11 +66,15 @@ function playTecla() {
 }
 
 function playTimerFim() {
-  try {
-    const snd = new Audio(audioFiles.timerFim);
-    snd.volume = timerVol();
-    snd.play().catch(() => {});
-  } catch(e){}
+  
+  setTimeout(() => {
+      try {
+      const snd = new Audio(audioFiles.timerFim);
+      snd.volume = timerVol();
+      snd.play().catch(() => {});
+    } catch(e){}
+  }, 0);
+  
 }
 
 function playCountdown() {
@@ -812,143 +816,3 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ═══════════════════════════════════════════════════════
-// IMPORTAÇÃO E EXPORTAÇÃO
-// ═══════════════════════════════════════════════════════
-
-function exportTasks() {
-  playSfx('tecla1');
-  
-  // Captura o conteúdo atual do Markdown diretamente do localStorage ou textarea
-  const currentNotes = localStorage.getItem("tarefa_recompensa_notes") || "";
-  
-  // Empacota tudo em um único objeto estruturado de backup
-  const backupData = {
-    todos: state.todos,
-    notes: currentNotes
-  };
-  
-  const dataStr = JSON.stringify(backupData, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "tarefas_e_anotacoes_backup.json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  closeImportExport();
-}
-
-async function shareTasks() {
-  playSfx('tecla1');
-
-  if (!navigator.share) {
-    alert('A função de compartilhar não é suportada neste navegador. Use o botão "Baixar".');
-    return;
-  }
-
-  const currentNotes = localStorage.getItem("tarefa_recompensa_notes") || "";
-  const backupData = {
-    todos: state.todos,
-    notes: currentNotes
-  };
-  
-  const dataStr = JSON.stringify(backupData, null, 2);
-  const file = new File([dataStr], "tarefas_e_anotacoes.json", { type: "application/json" });
-  
-  const textMessage = '✨ Lista de afazeres e Anotações!\n\nAbra e importe ela no site:\n👉 https://fellipederato.github.io/Tarefa-e-Recompensa/';
-
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: 'Tarefa & Recompensa',
-        text: textMessage,
-        files: [file]
-      });
-    } else {
-      throw new Error('Arquivos não suportados');
-    }
-    closeImportExport();
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    try {
-      await navigator.share({
-        title: 'Tarefa & Recompensa',
-        text: textMessage + '\n\n(Dica: Baixe o arquivo de backup completo direto no site!)'
-      });
-      closeImportExport();
-    } catch (err2) {
-      console.log('Compartilhamento final falhou.', err2);
-    }
-  }
-}
-
-function importTasks(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const importedData = JSON.parse(e.target.result);
-      
-      // Suporte Legado e Novo Formato: Verifica se é o pacote completo ou apenas a lista antiga de tarefas
-      if (importedData && importedData.todos && Array.isArray(importedData.todos)) {
-        // Novo formato (Tarefas + Anotações)
-        state.todos = importedData.todos;
-        const importedNotes = importedData.notes || "";
-        localStorage.setItem("tarefa_recompensa_notes", importedNotes);
-        
-        // Atualiza a interface gráfica do editor imediatamente
-        const textarea = document.getElementById("md-textarea");
-        if (textarea) textarea.value = importedNotes;
-        if (typeof updateMarkdownPreview === "function") updateMarkdownPreview();
-        
-      } else if (Array.isArray(importedData)) {
-        // Formato antigo (Apenas lista de tarefas)
-        state.todos = importedData;
-      } else {
-        alert("Erro: O arquivo não contém dados válidos.");
-        closeImportExport();
-        return;
-      }
-      
-      saveState();
-      renderTodos();
-      playSfx('checkbox');
-      alert("Dados importados com sucesso!");
-      
-    } catch (err) {
-      alert("Erro ao ler o arquivo JSON. Ele pode estar corrompido.");
-    }
-    closeImportExport();
-    event.target.value = '';
-  };
-  reader.readAsText(file);
-}
-
-function openImportExport() {
-  try {
-    if (typeof playSfx === 'function') playSfx('botaoBase');
-  } catch (err) {
-    console.log("Erro no áudio, ignorando...", err);
-  }
-  
-  const overlay = document.getElementById('ie-overlay');
-  if (overlay) overlay.style.display = 'flex';
-}
-
-function closeImportExport() {
-  try {
-    if (typeof playSfx === 'function') playSfx('botaoBase');
-  } catch (err) {
-    console.log("Erro no áudio, ignorando...", err);
-  }
-  
-  const overlay = document.getElementById('ie-overlay');
-  if (overlay) overlay.style.display = 'none';
-}
